@@ -1,0 +1,22 @@
+# Proposed configuration; not loaded or enforced yet.
+default_decision: deny
+allowed_origins:
+  - http://127.0.0.1:8000
+allowed_route_patterns:
+  - '^/$'
+  - '^/members$'
+  - '^/members/[0-9]+$'
+  - '^/members/[0-9]+/accounts$'
+allowed_actions:
+  - navigate
+  - click
+  - fill
+  - read
+  - wait
+  - verify
+allowed_operations:
+  - search_member
+  - open_member
+  - open_accounts
+  - read_savings_balance
+risky_action_decision: block

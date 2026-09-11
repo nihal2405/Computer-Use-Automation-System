@@ -1,0 +1,8 @@
+# Proposed target; the mock app is not implemented yet.
+target_id: mock_bank
+product: synthetic_bank
+supported_versions:
+  - '1.0'
+entry_url: http://127.0.0.1:8000/
+surface: browser
+locator_overrides: {}

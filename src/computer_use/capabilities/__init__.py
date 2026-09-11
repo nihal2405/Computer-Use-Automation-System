@@ -1,0 +1,1 @@
+"""Capabilities subsystem scaffold."""

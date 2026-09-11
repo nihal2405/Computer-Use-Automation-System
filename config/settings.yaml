@@ -1,0 +1,10 @@
+# Proposed configuration; not loaded or enforced yet.
+max_steps: 30
+run_timeout_seconds: 120
+step_timeout_seconds: 10
+max_retries: 2
+max_no_progress_steps: 3
+browser:
+  headless: false
+artifact_directory: artifacts
+run_directory: runs
