@@ -11,7 +11,9 @@ is in [evidence/phase8](evidence/phase8/README.md). The [acceptance guide](docs/
 provides the complete reviewer path, coverage map and reproducibility limits.
 Fresh-environment acceptance passed **349 tests**, **40 genuine-artifact replay/handoff
 checks**, and **eight real CLI scenarios**. See [the results](evidence/phase9-verified/README.md).
-Public GitHub publication is authorized and pending the final commit review.
+The implementation is published on [GitHub](https://github.com/nihal2405/Computer-Use-Automation-System).
+The [post-commit review](evidence/post-commit-review.json) records 349 passing tests
+on the release implementation and its credential scan.
 Nothing has been emailed or submitted.
 
 ## Setup
@@ -142,5 +144,5 @@ model-only artifact from unrecorded human actions. The operator UI is loopback-o
 not a production multi-user console. Credentials, raw traces, browser profiles and
 runtime outputs are ignored by Git; only inspected sanitized evidence is retained.
 
-GitHub publication is authorized. Email submission remains a separate action.
+GitHub publication is complete. Email submission remains a separate action.
 [Delivery preparation](docs/delivery.md) records the current state.

@@ -1,8 +1,8 @@
-# Local delivery preparation
+# Delivery status
 
 The implementation, reviewer instructions, design report and inspected evidence
-are prepared locally. Public GitHub publication is now authorized and follows the
-final commit review. Email submission has not been requested or performed.
+are published in the public [GitHub repository](https://github.com/nihal2405/Computer-Use-Automation-System).
+Email submission has not been requested or performed.
 
 ## Prepared files
 
@@ -36,15 +36,19 @@ snapshot that was tested. Final packaging edits update documentation, module
 docstrings and redaction-token encoding; a post-commit review records verification
 of the final implementation tree separately.
 
+The implementation commit `0e0c9fe8511dfd878449936d569a87cfb0d815f0` passed all
+349 tests after committing, with no failures or skips. Its 173 tracked files and
+reachable Git blobs passed the configured-key and local-file exclusion checks.
+See [post-commit-review.json](../evidence/post-commit-review.json). Later commits
+record review results and publication status; they do not change runtime behavior.
+
 ## Publication state
 
-- Public GitHub repository creation and push are authorized but not yet completed
-  at the time of this preparation record.
+- The user created the public repository; the reviewed implementation was pushed
+  to `main` on 2026-09-13.
 - Sending an email or submitting the repository link remains deferred.
 
-The user will create the GitHub repository and supply its remote URL. After the
-final diff and credential review, commit and push the reviewed files. The
-assignment asks for a repository link, not an emailed ZIP. A later
+The assignment asks for a repository link, not an emailed ZIP. A later
 submission request must identify the recipient and sending account; nothing in
 the assignment attachment itself authorizes sending a message.
 

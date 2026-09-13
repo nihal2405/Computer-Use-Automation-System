@@ -1,6 +1,6 @@
 {
   "review_date": "2026-09-13",
-  "status": "credential_review_passed_final_suite_pending",
+  "status": "passed",
   "prospective_files_scanned": 172,
   "commits_scanned": 1,
   "historical_blobs_scanned": 216,
@@ -9,13 +9,13 @@
   "dotenv_ignored": true,
   "configured_key_findings": [],
   "runtime_evidence_files_checked": 49,
-  "remote_count": 0,
+  "remote_count": 1,
   "pdf_pages": 3,
   "pdf_visual_review": "passed",
   "report_markdown_sha256": "713cfeaaaab3748ffd87c6a23ce60663ac63878e159f46bd4abd90a5252ef399",
   "report_pdf_sha256": "2819733fca84e6057517129804b7ed8f91e1fc48501b83123a77c255db70b43d",
   "accepted_runtime_unchanged": false,
-  "publication_performed": false,
+  "publication_performed": true,
   "email_sent": false,
   "scope": "Configured API-key values, credential file types, synthetic runtime value persistence, historical evidence correlation, acceptance hashes, report layout and local documentation links. Not a comprehensive security audit.",
   "changes_since_acceptance": "Module docstrings, redaction-token encoding, delivery documentation and PDF.",
@@ -29,5 +29,6 @@
       "failed": 0
     },
     "full_rerun": "Interrupted; post-commit rerun pending."
-  }
+  },
+  "post_commit_review": "post-commit-review.json"
 }

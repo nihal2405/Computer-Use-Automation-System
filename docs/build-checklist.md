@@ -258,14 +258,15 @@ See [acceptance](acceptance.md) and [verified evidence](../evidence/phase9-verif
 - [x] **Review tracked files and evidence before any publication.**
   Why: local credentials, browser profiles, raw traces, or overstated claims must
   not accidentally become part of a submission.
-- [ ] **Publish to GitHub and submit only when requested.** Public GitHub
-  publication is now requested; email submission remains a separate action.
+- [x] **Publish to GitHub when requested.** The reviewed implementation is on
+  [GitHub](https://github.com/nihal2405/Computer-Use-Automation-System).
+- [ ] **Submit by email only when requested.** Email submission remains deferred.
   Why: final delivery is needed for evaluation, while publication and sending an
   email are separate actions requiring the user's direction.
 
 Local delivery preparation is complete: verified README/demo instructions, a
 973-word report under the seven headings, a visually checked three-page PDF,
-and a credential/evidence review. GitHub publication is now authorized; email
+and a credential/evidence review. GitHub publication is complete; email
 submission remains deferred. See [delivery](delivery.md).
 
 Native desktop execution, a full multi-tenant platform, distributed queues, a
