@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "id": "read_savings_balance",
+  "capability_version": "1.0.0",
+  "goal": "Retrieve the requested member's current savings balance and currency from the visible banking UI.",
+  "target": {"product": "synthetic_bank", "versions": ["1.0"], "surface": "browser"},
+  "inputs": {"member_id": {"type": "string", "description": "Member identifier supplied by the caller"}},
+  "outputs": {
+    "balance": {"type": "decimal_string", "description": "Visible savings balance without currency symbol"},
+    "currency": {"type": "currency_code", "description": "Visible savings currency code"}
+  },
+  "output_targets": {
+    "balance": {"strategy": "css", "selector": "td.savings-balance", "rationale": "Reviewed savings output cell"},
+    "currency": {"strategy": "css", "selector": "td.savings-currency", "rationale": "Reviewed currency output cell"}
+  },
+  "success_checkpoint": {
+    "kind": "text_equals",
+    "target": {"strategy": "css", "selector": ".accounts-member-id", "rationale": "Verify the requested account owner"},
+    "expected": {"source": "input", "ref": "inputs.member_id"}
+  },
+  "business_outcomes": [{
+    "code": "member_not_found", "description": "No member matches the requested identifier",
+    "when": {"kind": "visible", "target": {"strategy": "text", "text": {"source": "literal", "value": "No matching member"}, "rationale": "Reviewed empty search message"}}
+  }],
+  "recovery_rules": [{
+    "code": "slow_loading", "strategy": "wait_for", "max_attempts": 2, "timeout_ms": 5000,
+    "when": {"kind": "visible", "target": {"strategy": "text", "text": {"source": "literal", "value": "Loading"}, "rationale": "Reviewed loading state"}},
+    "until": {"kind": "hidden", "target": {"strategy": "text", "text": {"source": "literal", "value": "Loading"}, "rationale": "Wait until loading disappears"}}
+  }]
+}

@@ -1,0 +1,29 @@
+{
+  "scenario": "session_expired",
+  "run_id": "c0ae32de-f959-4a9b-87b1-fc7a1e02df41",
+  "session_id": "79e0cc55-1d11-4645-b5be-423d53da4a9f",
+  "status": "failure",
+  "code": "session_expired",
+  "exit_code": 1,
+  "expected_status": "failure",
+  "expected_code": "session_expired",
+  "model_imports_blocked": true,
+  "mock_app_imports_blocked": true,
+  "api_keys_removed": true,
+  "events": 27,
+  "snapshots": [
+    "780ac7b1-7c8a-4a65-8eb9-fdbd97bacafe.json"
+  ],
+  "request_counts": {
+    "search_posts": 1,
+    "account_gets": 1,
+    "other_requests": 0
+  },
+  "checkpoint_verified": false,
+  "configuration_overrides": {
+    "origin": "http://127.0.0.1:60246",
+    "headless": true,
+    "slow_load_ms": 1500
+  },
+  "passed": true
+}

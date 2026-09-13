@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">ACCOUNT ACCESS</p><h1>Review required</h1><p>Account information is waiting for acknowledgement.</p></div>
+<section class="card blocked-card"><span class="status-dot"></span> Awaiting operator review</section>
+<dialog open class="review-dialog" aria-labelledby="review-title" aria-describedby="review-description">
+  <p class="eyebrow">OPERATOR ACKNOWLEDGEMENT</p><h2 id="review-title">Additional review required</h2>
+  <p id="review-description">Please confirm that you are ready to view the synthetic accounts for {{ member.name }}, member {{ member.id }}.</p>
+  <div class="dialog-note">This demo does not submit a transaction or change any balance.</div>
+  <form method="post" action="{{ url_for('accounts', member_id=member.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="decision" value="acknowledge">
+    <button type="submit" autofocus>Continue to accounts</button>
+    <a href="{{ url_for('search') }}">Return to search</a>
+  </form>
+</dialog>
+{% endblock %}

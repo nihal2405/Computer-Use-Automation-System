@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">MEMBER DIRECTORY</p><h1>Search results</h1><p>Results for member ID <strong>{{ member_id }}</strong>.</p></div>
+<section class="card">
+  {% if member %}
+  <div class="card-header"><h2>Matching members</h2><span class="count-badge">1 member</span></div>
+  <div class="table-wrap"><table><caption class="sr-only">Matching member records</caption><thead><tr><th scope="col">Member ID</th><th scope="col">Member</th><th scope="col">Branch</th><th scope="col">Status</th></tr></thead><tbody>
+    <tr><td><a class="member-link" href="{{ url_for('member_detail', member_id=member.id) }}">{{ member.id }}</a></td><td><span class="person-name">{{ member.name }}</span></td><td>{{ member.branch }}</td><td><span class="status-pill">Active</span></td></tr>
+  </tbody></table></div>
+  <p class="card-bottom">Select the member ID to open their profile.</p>
+  {% else %}
+  <div class="empty-state" role="status"><span class="empty-icon" aria-hidden="true">⌕</span><h2>No matching member</h2><p>No member record matched this search. Check the ID or start a new search.</p></div>
+  {% endif %}
+</section>
+<a class="back-link" href="{{ url_for('search') }}">← New search</a>
+{% endblock %}

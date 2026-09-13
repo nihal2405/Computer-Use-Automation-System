@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">MEMBER PROFILE</p><h1>Member details</h1><p>Review this member's profile before opening their accounts.</p></div>
+<section class="card profile-card">
+  <div class="profile-identity"><span class="avatar large">{{ member.initials }}</span><div><h2>{{ member.name }}</h2><p>Member ID <strong>{{ member.id }}</strong></p></div><span class="status-pill">Active member</span></div>
+  <dl class="profile-facts"><div><dt>Member since</dt><dd>{{ member.member_since }}</dd></div><div><dt>Home branch</dt><dd>{{ member.branch }}</dd></div><div><dt>Record type</dt><dd>Synthetic demo member</dd></div></dl>
+</section>
+<section class="card accounts-entry"><div><p class="eyebrow">ACCOUNT OVERVIEW</p><h2>Checking &amp; savings</h2><p>View balances and account information for {{ member.name }}.</p></div><a class="button" href="{{ url_for('accounts', member_id=member.id) }}">Accounts</a></section>
+<a class="back-link" href="{{ url_for('members') }}">← Search results</a>
+{% endblock %}

@@ -1,0 +1,29 @@
+{
+  "scenario": "permission_denied",
+  "run_id": "944c77a9-ea30-47f0-b62d-90019b577270",
+  "session_id": "bc86a6f8-0a54-428e-b5da-a071e68a7afa",
+  "status": "failure",
+  "code": "permission_denied",
+  "exit_code": 1,
+  "expected_status": "failure",
+  "expected_code": "permission_denied",
+  "model_imports_blocked": true,
+  "mock_app_imports_blocked": true,
+  "api_keys_removed": true,
+  "events": 27,
+  "snapshots": [
+    "d38971a7-eb6b-4ccb-952f-deb71e432859.json"
+  ],
+  "request_counts": {
+    "search_posts": 1,
+    "account_gets": 1,
+    "other_requests": 0
+  },
+  "checkpoint_verified": false,
+  "configuration_overrides": {
+    "origin": "http://127.0.0.1:60217",
+    "headless": true,
+    "slow_load_ms": 1500
+  },
+  "passed": true
+}

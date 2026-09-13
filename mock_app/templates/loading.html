@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">MEMBER DIRECTORY</p><h1>Searching members</h1><p>Your search is in progress.</p></div>
+<section class="card loading-card" data-retry-ms="{{ retry_ms }}" aria-busy="true">
+  <span class="spinner" aria-hidden="true"></span><p class="loading-title" role="status">Loading</p><p>Retrieving member records. Results will appear automatically.</p>
+  <noscript><p>JavaScript is disabled. <a href="{{ url_for('members') }}">Reload results</a> after a few seconds.</p></noscript>
+</section>
+<a class="back-link" href="{{ url_for('search') }}">← Cancel search</a>
+{% endblock %}

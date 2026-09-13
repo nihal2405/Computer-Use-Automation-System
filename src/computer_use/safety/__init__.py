@@ -1,1 +1,1 @@
-"""Safety subsystem scaffold."""
+"""Default-deny runtime policy, request boundaries, and redaction."""

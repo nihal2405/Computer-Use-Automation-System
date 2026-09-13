@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">MEMBER DIRECTORY</p><h1>Member search</h1><p>Find a member, review their profile, and view their accounts.</p></div>
+<div class="search-layout">
+  <section class="card search-card" aria-labelledby="lookup-title">
+    <div class="section-heading"><span class="section-icon" aria-hidden="true">⌕</span><div><h2 id="lookup-title">Find a member</h2><p>Search using their unique member ID.</p></div></div>
+    {% if validation_message %}<div class="alert" role="alert"><strong>Invalid member ID</strong><p>{{ validation_message }}</p></div>{% endif %}
+    <form method="post" action="{{ url_for('members') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="member-id">Member ID</label>
+      <div class="search-input-row"><input id="member-id" name="member_id" type="text" inputmode="numeric" autocomplete="off" placeholder="Enter member ID" maxlength="100" value="{{ member_id }}" aria-describedby="member-help" {% if validation_message %}aria-invalid="true"{% endif %}><button type="submit">Search</button></div>
+      <p class="field-hint" id="member-help">Enter 4–10 digits. Leading zeros are preserved.</p>
+    </form>
+    <div class="workflow-hint"><span>01 <strong>Search</strong></span><span aria-hidden="true">→</span><span>02 Profile</span><span aria-hidden="true">→</span><span>03 Accounts</span></div>
+  </section>
+  <aside class="card guide-card" aria-labelledby="demo-members-title">
+    <p class="eyebrow">TRY THE DEMO</p><h2 id="demo-members-title">Two members to explore</h2><p>Use either ID to walk through the member workflow.</p>
+    <div class="sample-member"><span class="avatar">AM</span><div><strong>Avery Morgan</strong><span>Member ID <code>1001</code></span></div></div>
+    <div class="sample-member"><span class="avatar warm">JE</span><div><strong>Jordan Ellis</strong><span>Member ID <code>2002</code></span></div></div>
+    <p class="guide-foot">Try <code>9999</code> for a member with no matching record.</p>
+  </aside>
+</div>
+{% if scenario.id != 'normal' %}<section class="scenario-note"><strong>{{ scenario.label }} is active.</strong> {{ scenario.description }} <a href="{{ url_for('demo_controls') }}">Change scenario</a></section>{% endif %}
+{% endblock %}

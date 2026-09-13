@@ -1,4 +1,4 @@
-# Proposed configuration; not loaded or enforced yet.
+# Shared execution bounds. Discovery also enforces repeated-state/no-progress limits.
 max_steps: 30
 run_timeout_seconds: 120
 step_timeout_seconds: 10

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" data-product="synthetic_bank" data-version="{{ product_version }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · Northstar Member Services</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body data-state="{{ state }}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('search') }}" aria-label="Northstar home">
+      <span class="brand-mark" aria-hidden="true">N<span>✦</span></span>
+      <span>northstar<span class="brand-sub">MEMBER SERVICES</span></span>
+    </a>
+    <div class="topbar-right"><span class="demo-badge">Synthetic data only</span><span class="operator">Demo operator <span class="avatar small">DO</span></span></div>
+  </header>
+  <div class="workspace">
+    <aside class="sidebar">
+      <p class="eyebrow">WORKSPACE</p>
+      <nav aria-label="Main navigation">
+        <a class="nav-item {{ 'selected' if request.endpoint != 'demo_controls' else '' }}" href="{{ url_for('search') }}" {% if request.endpoint != 'demo_controls' %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span> Members</a>
+        <a class="nav-item {{ 'selected' if request.endpoint == 'demo_controls' else '' }}" href="{{ url_for('demo_controls') }}" {% if request.endpoint == 'demo_controls' %}aria-current="page"{% endif %}><span aria-hidden="true">⚙</span> Demo controls</a>
+      </nav>
+      <div class="sidebar-note"><span class="status-dot"></span> Local demonstration<p>Fictional members.<br>No real banking connection.</p></div>
+    </aside>
+    <main id="main">
+      <div class="context-line"><span>Member services <span class="slash">/</span> {{ title }}</span><span class="scenario-badge">{{ scenario.label }}</span></div>
+      {% block content %}{% endblock %}
+      <footer>Northstar is a fictional institution. All records and balances are synthetic. <span>Demo v{{ product_version }}</span></footer>
+    </main>
+  </div>
+</body>
+</html>

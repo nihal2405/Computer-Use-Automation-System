@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-09-13T02:16:07.694810+00:00",
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "discovery_run_id": "4caff583-f0a4-41e8-9236-af22520c9652",
+  "replay_run_id": "e5afc821-8704-4cf3-8b7b-bb5d4a50ac89",
+  "model_responses": 6,
+  "artifact_sha256": "787563c031a5cc30f771d070775ecc711ae3857c3494c3cef9b248262f3d58f1",
+  "capability_version": "1.0.0",
+  "discovery_status": "success",
+  "replay_status": "success",
+  "checkpoint_verified": true,
+  "different_replay_input": true,
+  "replay_model_imports_blocked": true,
+  "replay_api_keys_removed": true,
+  "source_state": "local working tree; not committed or published"
+}

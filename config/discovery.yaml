@@ -1,0 +1,6 @@
+# Model transport is separate from browser policy. OpenAI and Gemini are supported.
+provider: gemini
+model: gemini-2.5-flash
+reasoning_effort: none
+request_timeout_seconds: 30
+max_output_tokens: 2500

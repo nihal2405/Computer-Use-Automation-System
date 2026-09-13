@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">{{ 'ACCOUNT ACCESS' if member else 'MEMBER SERVICES' }}</p><h1>{{ title }}</h1><p>{{ 'Account information could not be displayed.' if member else 'Please review the message below.' }}</p></div>
+<section class="card error-card" role="alert"><span class="error-symbol" aria-hidden="true">!</span><h2>{{ title }}</h2><p>{{ message }}</p>
+  {% if state == 'session_expired' %}
+  <form method="post" action="{{ url_for('restart_session') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Restart demo session</button></form>
+  {% else %}
+  <a class="button" href="{{ url_for('search') }}">Return to member search</a>
+  {% endif %}
+</section>
+<a class="back-link" href="{{ url_for('demo_controls') }}">Manage demo scenario →</a>
+{% endblock %}

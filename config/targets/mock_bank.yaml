@@ -1,4 +1,4 @@
-# Proposed target; the mock app is not implemented yet.
+# Validated target configuration for the shared executor.
 target_id: mock_bank
 product: synthetic_bank
 supported_versions:

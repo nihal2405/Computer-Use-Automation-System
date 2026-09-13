@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "id": "read_savings_balance",
+  "capability_version": "1.0.0",
+  "description": "Hand-authored development artifact for deterministic replay tests; not model-discovered and not evidence of genuine LLM discovery.",
+  "provenance": "development_fixture",
+  "target": {"product": "synthetic_bank", "versions": ["1.0"], "surface": "browser"},
+  "inputs": {
+    "member_id": {"type": "string", "description": "Synthetic member identifier supplied per invocation"}
+  },
+  "outputs": {
+    "balance": {"type": "decimal_string", "description": "Savings balance with a decimal point, without a currency symbol"},
+    "currency": {"type": "currency_code", "description": "Three uppercase currency letters displayed in the UI"}
+  },
+  "steps": [
+    {"id": "open_search", "operation": "search_member", "action": {"action": "navigate", "path": "/"}},
+    {
+      "id": "enter_member_id", "operation": "search_member",
+      "action": {
+        "action": "fill",
+        "target": {"strategy": "label", "label": {"source": "literal", "value": "Member ID"}, "rationale": "Exact visible form label identifies the search field"},
+        "value": {"source": "input", "ref": "inputs.member_id"}
+      }
+    },
+    {
+      "id": "submit_search", "operation": "search_member",
+      "action": {
+        "action": "click",
+        "target": {"strategy": "role", "role": "button", "name": {"source": "literal", "value": "Search"}, "rationale": "Exact button role and accessible name identify submission"}
+      }
+    },
+    {
+      "id": "open_member", "operation": "open_member",
+      "action": {
+        "action": "click",
+        "target": {"strategy": "role", "role": "link", "name": {"source": "input", "ref": "inputs.member_id"}, "rationale": "The result link is identified by the requested synthetic member ID"}
+      }
+    },
+    {
+      "id": "open_accounts", "operation": "open_accounts",
+      "action": {
+        "action": "click",
+        "target": {"strategy": "role", "role": "link", "name": {"source": "literal", "value": "Accounts"}, "rationale": "Exact navigation link name avoids depending on link position"}
+      },
+      "postcondition": {
+        "kind": "visible",
+        "target": {"strategy": "role", "role": "heading", "name": {"source": "literal", "value": "Accounts"}, "rationale": "Visible heading confirms the account screen was reached"}
+      }
+    },
+    {
+      "id": "read_balance", "operation": "read_savings_balance",
+      "action": {
+        "action": "read", "output": "balance",
+        "target": {"strategy": "css", "selector": "td.savings-balance", "rationale": "Proposed unique savings cell class; adapter must reject zero or multiple matches"}
+      }
+    },
+    {
+      "id": "read_currency", "operation": "read_savings_balance",
+      "action": {
+        "action": "read", "output": "currency",
+        "target": {"strategy": "css", "selector": "td.savings-currency", "rationale": "Proposed unique currency cell beside the savings balance"}
+      }
+    }
+  ],
+  "success_checkpoint": {
+    "kind": "text_equals",
+    "target": {"strategy": "css", "selector": ".accounts-member-id", "rationale": "Visible account owner must match the requested member after navigation"},
+    "expected": {"source": "input", "ref": "inputs.member_id"}
+  },
+  "business_outcomes": [
+    {
+      "code": "member_not_found", "description": "The search completed but no synthetic member matched",
+      "when": {"kind": "visible", "target": {"strategy": "text", "text": {"source": "literal", "value": "No matching member"}, "rationale": "Explicit empty-search message distinguishes an answer from an app failure"}}
+    }
+  ],
+  "recovery_rules": [
+    {
+      "code": "slow_loading", "strategy": "wait_for", "max_attempts": 2, "timeout_ms": 5000,
+      "when": {"kind": "visible", "target": {"strategy": "text", "text": {"source": "literal", "value": "Loading"}, "rationale": "Known loading indicator permits bounded waiting"}},
+      "until": {"kind": "hidden", "target": {"strategy": "text", "text": {"source": "literal", "value": "Loading"}, "rationale": "Recovery finishes when the known loading indicator disappears"}}
+    }
+  ]
+}

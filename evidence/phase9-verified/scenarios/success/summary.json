@@ -1,0 +1,27 @@
+{
+  "scenario": "normal",
+  "run_id": "13835c78-1ec9-402f-98de-f30a5a0156eb",
+  "session_id": "129f1a5b-f31a-4664-8ce4-ed52a216ba55",
+  "status": "success",
+  "code": null,
+  "exit_code": 0,
+  "expected_status": "success",
+  "expected_code": null,
+  "model_imports_blocked": true,
+  "mock_app_imports_blocked": true,
+  "api_keys_removed": true,
+  "events": 39,
+  "snapshots": [],
+  "request_counts": {
+    "search_posts": 1,
+    "account_gets": 1,
+    "other_requests": 0
+  },
+  "checkpoint_verified": true,
+  "configuration_overrides": {
+    "origin": "http://127.0.0.1:60195",
+    "headless": true,
+    "slow_load_ms": 1500
+  },
+  "passed": true
+}

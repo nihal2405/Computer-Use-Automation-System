@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">LOCAL DEMONSTRATION</p><h1>Demo controls</h1><p>Choose a condition, then walk through the member workflow.</p></div>
+<section class="card scenario-controls">
+  <h2>Choose a scenario</h2><p>Applies to this browser session. Applying a scenario starts a fresh search and resets any acknowledgement.</p>
+  <form method="post" action="{{ url_for('demo_controls') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="scenario">Scenario</label><div class="search-input-row"><select id="scenario" name="scenario">{% for option in scenarios %}<option value="{{ option.id }}" {% if option.id == scenario.id %}selected{% endif %}>{{ option.label }}</option>{% endfor %}</select><button type="submit">Apply scenario</button></div>
+  </form>
+</section>
+<section class="scenario-grid" aria-label="Scenario guide">
+  {% for option in scenarios %}
+  <article class="card scenario-tile"><span class="scenario-number">{{ '%02d'|format(loop.index) }}</span><h2>{{ option.label }}</h2><p>{{ option.description }}</p><span class="trigger">{{ option.trigger }}</span></article>
+  {% endfor %}
+</section>
+{% endblock %}

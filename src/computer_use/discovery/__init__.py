@@ -1,1 +1,1 @@
-"""Discovery subsystem scaffold."""
+"""Bounded model discovery and successful-action recording."""

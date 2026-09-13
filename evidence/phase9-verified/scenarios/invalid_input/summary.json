@@ -1,0 +1,29 @@
+{
+  "scenario": "invalid_input",
+  "run_id": "841da24f-082f-4792-b18e-a54a2f37d3ba",
+  "session_id": "ad88e492-ec6c-430d-88d0-b819226ee043",
+  "status": "failure",
+  "code": "invalid_input",
+  "exit_code": 1,
+  "expected_status": "failure",
+  "expected_code": "invalid_input",
+  "model_imports_blocked": true,
+  "mock_app_imports_blocked": true,
+  "api_keys_removed": true,
+  "events": 16,
+  "snapshots": [
+    "72c59dc2-f822-486c-a5b0-56ca5a01f01b.json"
+  ],
+  "request_counts": {
+    "search_posts": 1,
+    "account_gets": 0,
+    "other_requests": 0
+  },
+  "checkpoint_verified": false,
+  "configuration_overrides": {
+    "origin": "http://127.0.0.1:60260",
+    "headless": true,
+    "slow_load_ms": 1500
+  },
+  "passed": true
+}

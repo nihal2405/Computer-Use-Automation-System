@@ -1,0 +1,48 @@
+{
+  "run_id": "baec121a-c9bf-42e9-8f32-423f6226399a",
+  "session_id": "d0ea5249-b58b-4ebc-aed8-62b03f180620",
+  "mode": "replay",
+  "operator": "manual_local_operator",
+  "model_calls": 0,
+  "target": {
+    "product": "synthetic_bank",
+    "version": "1.0"
+  },
+  "scenario": "unexpected_dialog",
+  "status": "success",
+  "checkpoint_verified": true,
+  "event_count": 53,
+  "human_event_count": 3,
+  "resolution_file": "a40893a7-ad63-4b70-8b55-731c76673c23.json",
+  "capability_path": "evidence/phase7/capability.json",
+  "capability_sha256": "787563c031a5cc30f771d070775ecc711ae3857c3494c3cef9b248262f3d58f1",
+  "files": {
+    "0b8f7210-1b5f-4375-bf5a-9fb024aa2b37.json": "efaeecda9331360d18cc9dd6f0c01fc4c544ac436dfe3df49d81cdcbde41ecf0",
+    "a1695f08-ae59-4acd-b67b-5fef272135d3.json": "5677a12b22a0aa410e5906d24b7e4c595cb1a814b2f81ac9227fe835a8a62d77",
+    "a40893a7-ad63-4b70-8b55-731c76673c23.json": "cebb079121ca49e82ebc2b6e217687993ee4e2248cba129c1f8d1d4cfeff2e38",
+    "d45158b3-7c5d-429c-ab2b-488f996dccae.json": "e5d15fc06a7684a92ba66afa419fea1690868cb5c24e7eecc7890caeb814e136",
+    "ef5426ac-dff3-4ff8-879c-6cd077a20425.json": "979117928c6d310ba6139c8d2272304b764f245ccfbe7dc7ca7a35b886a586a1",
+    "events.jsonl": "ca2ba9fa141a5dfe3387d40dbe26933c3e97ea3dfe0b348f5b701067e862c70b"
+  },
+  "runtime_source_sha256": {
+    "src/computer_use/handoff/coordinator.py": "ea1d50768de4476b78fb474bf76322807ba1e9eab5a36dfd4a7c5afa647285e1",
+    "src/computer_use/handoff/capture.py": "4f4b1626e4f1fcf49cad7df15864eb10f4a55178b24b5ac802302b4f68f562ea",
+    "src/computer_use/replay/engine.py": "af2b2b59a451ea619cad029e99d0f4b7c9ecb0913c13228e6de8c517da3db354",
+    "src/computer_use/execution/executor.py": "e16e3580183ff6649c406493799dd4dd165c0b38869e2ca21c14419656b4644c",
+    "src/computer_use/safety/policy.py": "29116574bc014187aee82829f7062458fb044e654a0a37cbf8151c4db09d7c5b",
+    "src/computer_use/sessions/control.py": "6211fde1a44c7baf434db48cc079e7ed5ffeb42de662f2c96fa4f98f61caab5b",
+    "config/policy.yaml": "8c452d2b259c57bf32701a1c356a594bcabeb64a87c592b04083aba1c1e42527",
+    "scripts/handoff_demo.py": "4977b0ddb498aa003154dc9ea8cbd7bbe6d346fb3b71d64a48d4305d7e897662"
+  },
+  "tests": {
+    "command": "uv run --locked python -m pytest -q",
+    "passed": 345,
+    "handoff_cases": 19
+  },
+  "notes": [
+    "Operator identity is not authenticated beyond possession of the local token.",
+    "No assistant or test script issued takeover, dialog acknowledgement, or resume commands in this run.",
+    "Source hashes cover the core runtime; display-only operator UI edits and documentation were finalized after the manual run.",
+    "Outputs remain redacted in preserved diagnostic evidence."
+  ]
+}

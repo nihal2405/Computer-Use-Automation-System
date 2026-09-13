@@ -1,0 +1,29 @@
+{
+  "scenario": "application_error",
+  "run_id": "64c441b8-f51e-43cc-bcde-29ce9ee3ac09",
+  "session_id": "101b08ba-6981-4fd4-bb6d-e9c0b2673612",
+  "status": "failure",
+  "code": "application_error",
+  "exit_code": 1,
+  "expected_status": "failure",
+  "expected_code": "application_error",
+  "model_imports_blocked": true,
+  "mock_app_imports_blocked": true,
+  "api_keys_removed": true,
+  "events": 27,
+  "snapshots": [
+    "9f589131-0d03-47c5-9158-c5cd43bf8fe2.json"
+  ],
+  "request_counts": {
+    "search_posts": 1,
+    "account_gets": 1,
+    "other_requests": 0
+  },
+  "checkpoint_verified": false,
+  "configuration_overrides": {
+    "origin": "http://127.0.0.1:60232",
+    "headless": true,
+    "slow_load_ms": 1500
+  },
+  "passed": true
+}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-heading heading-with-person"><div><p class="eyebrow">MEMBER ACCOUNTS</p><h1>Accounts</h1><p>{{ member.name }} <span class="slash">/</span> Member ID <strong class="accounts-member-id">{{ member.id }}</strong></p></div><span class="avatar large">{{ member.initials }}</span></div>
+<section class="card">
+  <div class="card-header"><div><h2>Deposit accounts</h2><p>Current balances for this member.</p></div><span class="count-badge">{{ member.accounts|length }} accounts</span></div>
+  <div class="table-wrap"><table class="accounts-table"><caption class="sr-only">Member deposit account balances</caption><thead><tr><th scope="col">Account</th><th scope="col">Account number</th><th scope="col">Balance</th><th scope="col">Currency</th><th scope="col">Status</th></tr></thead><tbody>
+    {% for account in member.accounts %}
+    <tr><th scope="row"><span class="account-name"><span class="account-icon" aria-hidden="true">{{ '↗' if account.kind == 'Savings' else '⇄' }}</span>{{ account.kind }}</span></th><td class="account-number">•••• {{ account.last_four }}</td><td class="balance {{ 'savings-balance' if account.kind == 'Savings' else 'checking-balance' }}">{{ account.balance }}</td><td class="{{ 'savings-currency' if account.kind == 'Savings' else 'checking-currency' }}">{{ account.currency }}</td><td><span class="status-pill">Open</span></td></tr>
+    {% endfor %}
+  </tbody></table></div>
+  <p class="card-bottom">Read-only account information · All amounts shown are synthetic.</p>
+</section>
+<a class="back-link" href="{{ url_for('member_detail', member_id=member.id) }}">← Member details</a>
+{% endblock %}

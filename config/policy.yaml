@@ -1,22 +1,106 @@
-# Proposed configuration; not loaded or enforced yet.
+# Operator-reviewed permissions. Model actions cannot add rules or change this file.
 default_decision: deny
+risky_action_decision: block
 allowed_origins:
   - http://127.0.0.1:8000
-allowed_route_patterns:
-  - '^/$'
-  - '^/members$'
-  - '^/members/[0-9]+$'
-  - '^/members/[0-9]+/accounts$'
-allowed_actions:
-  - navigate
-  - click
-  - fill
-  - read
-  - wait
-  - verify
-allowed_operations:
-  - search_member
-  - open_member
-  - open_accounts
-  - read_savings_balance
-risky_action_decision: block
+navigation:
+  - {path: '^/$', methods: [GET]}
+  - {path: '^/members$', methods: [GET, POST]}
+  - {path: '^/members/[0-9]{4,10}$', methods: [GET]}
+  - {path: '^/members/[0-9]{4,10}/accounts$', methods: [GET]}
+resources:
+  - {path: '^/static/(styles\.css|app\.js)$', methods: [GET]}
+input_patterns:
+  member_id: '^[0-9]{4,10}$'
+human_requests:
+  # Same-member, explicit operator acknowledgement; never automation permission.
+  - path: '^/members/[0-9]{4,10}/accounts$'
+    method: POST
+    fields: {decision: acknowledge}
+    ignored_fields: [csrf_token]
+rules:
+  - operation: search_member
+    action: navigate
+    path: '^/$'
+  - operation: search_member
+    action: fill
+    target:
+      strategy: label
+      label: {source: literal, value: Member ID}
+      rationale: Reviewed search field
+    value: {source: input, ref: inputs.member_id}
+  - operation: search_member
+    action: click
+    target:
+      strategy: role
+      role: button
+      name: {source: literal, value: Search}
+      rationale: Reviewed search submission
+  - operation: open_member
+    action: click
+    target:
+      strategy: role
+      role: link
+      name: {source: input, ref: inputs.member_id}
+      rationale: Requested member result
+  - operation: open_accounts
+    action: click
+    target:
+      strategy: role
+      role: link
+      name: {source: literal, value: Accounts}
+      rationale: Read-only accounts navigation
+  - operation: read_savings_balance
+    action: read
+    target: {strategy: css, selector: td.savings-balance, rationale: Reviewed balance cell}
+  - operation: read_savings_balance
+    action: read
+    target: {strategy: css, selector: td.savings-currency, rationale: Reviewed currency cell}
+  - operation: open_accounts
+    action: verify
+    condition:
+      kind: visible
+      target:
+        strategy: role
+        role: heading
+        name: {source: literal, value: Accounts}
+        rationale: Accounts postcondition
+  - operation: read_savings_balance
+    action: verify
+    condition:
+      kind: text_equals
+      target: {strategy: css, selector: .accounts-member-id, rationale: Member checkpoint}
+      expected: {source: input, ref: inputs.member_id}
+  - operation: search_member
+    action: wait
+    condition:
+      kind: hidden
+      target:
+        strategy: text
+        text: {source: literal, value: Loading}
+        rationale: Loading indicator disappears
+  - operation: search_member
+    action: verify
+    condition:
+      kind: visible
+      target:
+        strategy: text
+        text: {source: literal, value: No matching member}
+        rationale: Recognized business outcome
+  - operation: open_member
+    action: wait
+    condition:
+      kind: visible
+      target:
+        strategy: role
+        role: link
+        name: {source: input, ref: inputs.member_id}
+        rationale: Requested member result appears
+  - operation: search_member
+    action: verify
+    condition:
+      kind: visible
+      target:
+        strategy: text
+        text: {source: literal, value: Loading}
+        rationale: Recognized delayed-load state

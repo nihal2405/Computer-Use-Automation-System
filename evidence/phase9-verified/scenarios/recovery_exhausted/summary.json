@@ -1,0 +1,30 @@
+{
+  "scenario": "slow_loading",
+  "run_id": "f098c22b-031e-49db-8840-0eeafb1434a6",
+  "session_id": "42e180fc-bf49-4975-9d78-2e82eb3d785a",
+  "status": "failure",
+  "code": "recovery_exhausted",
+  "exit_code": 1,
+  "expected_status": "failure",
+  "expected_code": "recovery_exhausted",
+  "model_imports_blocked": true,
+  "mock_app_imports_blocked": true,
+  "api_keys_removed": true,
+  "events": 28,
+  "snapshots": [
+    "b3648d06-7af9-4d94-b238-4a2d95146cbf.json",
+    "381d650f-e669-48ce-bf61-0e8a14aaedfd.json"
+  ],
+  "request_counts": {
+    "search_posts": 1,
+    "account_gets": 0,
+    "other_requests": 0
+  },
+  "checkpoint_verified": false,
+  "configuration_overrides": {
+    "origin": "http://127.0.0.1:60285",
+    "headless": true,
+    "slow_load_ms": 60000
+  },
+  "passed": true
+}

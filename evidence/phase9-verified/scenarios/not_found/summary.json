@@ -1,0 +1,27 @@
+{
+  "scenario": "normal",
+  "run_id": "cd1b142b-c298-47dd-925a-5b2d3f8696ed",
+  "session_id": "7591d4db-6d41-43d5-a30e-2d9aebe510d5",
+  "status": "business_outcome",
+  "code": "member_not_found",
+  "exit_code": 2,
+  "expected_status": "business_outcome",
+  "expected_code": "member_not_found",
+  "model_imports_blocked": true,
+  "mock_app_imports_blocked": true,
+  "api_keys_removed": true,
+  "events": 16,
+  "snapshots": [],
+  "request_counts": {
+    "search_posts": 1,
+    "account_gets": 0,
+    "other_requests": 0
+  },
+  "checkpoint_verified": false,
+  "configuration_overrides": {
+    "origin": "http://127.0.0.1:60209",
+    "headless": true,
+    "slow_load_ms": 1500
+  },
+  "passed": true
+}

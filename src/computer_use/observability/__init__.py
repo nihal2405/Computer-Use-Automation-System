@@ -1,1 +1,1 @@
-"""Observability subsystem scaffold."""
+"""Structured, redacted run events and diagnostic evidence."""

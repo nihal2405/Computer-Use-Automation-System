@@ -1,107 +1,122 @@
 # Architecture
 
-**Proposed design; implementation pending.** Use one Python automation package
-and a separate local mock banking application with synthetic data. The target
-workflow is search → member detail → accounts → savings balance. A browser driver
-will operate the UI; automation must never import mock data or retrieve balances
-through application APIs.
+This system discovers and replays a savings-balance lookup against a local Flask
+bank containing synthetic members. The workflow is search, member record,
+accounts, then balance and currency. Python controllers share one executor and
+one Playwright/Chromium surface. Keeping orchestration in one asyncio process
+makes browser lifetime and exclusive control explicit without introducing queues
+or services that the demonstration does not need.
 
-Discovery will observe the live surface, ask a model for a typed action, and send
-that action through a shared executor. Replay will load a capability and invoke
-the same executor without importing or calling the model client. The executor
-will check session ownership and policy before resolving and performing actions.
-A session manager will retain the browser across pauses. Initial implementation
-choices are Python and a Playwright browser adapter; provider selection remains
-open. One process keeps the control and debugging paths small.
+Discovery accepts a goal and reviewed target configuration. Gemini or OpenAI
+returns structured actions; validation and policy run before execution. Gemini
+2.5 Flash supplied six actual decisions in the preserved discovery run. The model
+sees reviewed control descriptions and live visibility/state flags, with input
+references instead of member values. It chooses the sequence within an approved
+vocabulary; it does not discover arbitrary locators on unknown websites. This
+limits generality while keeping model output and application text untrusted.
 
 # Artifact schema
 
-Use versioned JSON with separate schema and capability versions, a descriptive
-identity, typed input/output contracts, compatible target metadata, ordered
-actions, target descriptions, and a final success checkpoint. Each step will have
-a stable ID and explicit pre/postconditions where needed. Inputs such as member
-IDs will use declared parameter references rather than embedded discovery values.
-The compiler will bind values using known input provenance, not global string
-replacement. Artifacts must remain independent of browser-library objects and
-raw model transcripts. Reject unsupported versions, undeclared parameters,
-unsupported actions, and incompatible targets before executing.
+Pydantic contracts describe schema version, capability identity/version, compatible
+target, typed inputs/outputs, ordered steps, locator rationale, parameter
+references, success checkpoint, business outcomes, and bounded recovery rules.
+The balance is a validated decimal string, avoiding binary floating-point loss.
+Unknown actions, incompatible versions, missing inputs, bad references, and
+undeclared outputs are rejected before execution.
 
-Targets will prefer accessible labels and roles with an explicit scope. Missing
-or ambiguous matches must fail safely. Approved target overrides belong in target
-configuration and must not allow the model to broaden safety permissions.
+Compilation includes only successful actions and restores input references from
+known policy templates, never by replacing every matching string. The artifact
+is independent of the transcript and has explicit provenance and a discovery run
+ID. Genuine artifacts and hand-authored fixtures remain distinct. Immutable files
+and SHA-256 manifests support review and correlation; provenance is not a
+provider-signed attestation. Replay uses the same artifact for a different member
+and reads that member's current UI values.
 
 # Determinism & error handling
 
-Replay will execute stored steps with fixed targeting rules, bounded waits and
-predefined recovery branches. No model will decide replay actions. A verified
-checkpoint will precede returning the declared outputs; current UI data may
-change between runs. Input validation, failure diagnostics, and output shape
-validation are part of the execution contract.
+Replay binds inputs and follows recorded steps without model decisions. Exact
+scoped roles/labels are preferred; reviewed CSS identifies legacy-style balance
+cells. Missing or ambiguous controls fail rather than selecting the first match.
+Condition-based waits share step deadlines. Success requires typed outputs and
+a visible account-owner checkpoint; completed clicks alone are insufficient.
 
-Distinguish success, expected business outcomes such as member-not-found, and
-hard failures carrying step, expected state, observed state, and a diagnostic
-reference. Recoverable states will use bounded policies, such as waiting for a
-known delayed load. Permission denial, session expiry, unknown dialogs, and
-application errors need explicit handling rather than continuing blindly. Do not
-retry non-idempotent actions automatically. Discovery also needs step, time, and
-no-progress limits. Structured events and sanitized failure snapshots will make
-both paths inspectable.
+The result separates success, member-not-found, and hard failures such as denied
+permission, session expiry, app errors, invalid input, and failed checkpoints.
+Known loading permits bounded waits, with no repeated search submission. Exhausted
+recovery stops and requests intervention. Discovery additionally limits steps,
+elapsed time, invalid responses and repeated states. Model declarations cannot
+supply the result. Persistence failure closes the browser instead of reporting
+an unaudited success.
 
 # Heterogeneity & multi-tenant
 
-Keep observation, targeting, action, and checkpoint interfaces independent of
-Playwright. The first adapter will use browser-visible state. Semantic targeting
-alone does not solve non-semantic legacy markup; frame-aware scopes and approved
-locators can cover some legacy web surfaces. A future desktop adapter would need
-accessibility or visual targets with appropriate verification and ambiguity
-handling. Desktop execution is a design extension, not an implemented claim.
+Controllers use a surface contract rather than Playwright objects. A desktop
+adapter could resolve OS accessibility controls, with reviewed screenshot or
+coordinate targeting where accessibility is absent. Legacy frames require
+explicit frame scopes and separately tested navigation boundaries. Neither
+adapter is implemented; silently guessing visual targets would weaken safety.
 
-Separate vendor-product capability identity from tenant entry URLs, approved
-label/locator overrides, and supported application versions. Validate target
-identity and workflow preconditions before replay; incompatible versions should
-stop for review. Tenant credentials and browser contexts must remain isolated.
-Do not build queues, distributed orchestration, or a tenant platform for this demo.
+Tenant reuse would retain the capability while applying reviewed origin,
+identity, locator and operation configuration for a compatible app version. Each
+run already has an isolated browser context. Product/version markers and exact
+route checks reject incompatible targets; markers assume a cooperating app and
+are not authentication. New tenants need contract tests and policy review before
+reuse. A deployed tenant registry, credential vault and cross-tenant compatibility
+matrix are future infrastructure, not features claimed by this demonstration.
 
 # Escalation & handoff
 
-The intended control states are AUTOMATION_RUNNING, AWAITING_HUMAN,
-HUMAN_CONTROL, RESUME_CHECK, and terminal COMPLETED/FAILED. An intervention will
-include run/session identity, goal or capability, current step, stop reason, and
-sanitized state. The operator will take control of the same visible browser, with
-automation action dispatch disabled while human control is active.
+Interactive runs keep the existing browser alive and expose a token-protected
+loopback operator screen with goal, stopped action, reason and sanitized context.
+Ownership proceeds through AUTOMATION_RUNNING, AWAITING_HUMAN, HUMAN_CONTROL and
+RESUME_CHECK. Automation dispatch is blocked during human ownership; cookies,
+page and session identity survive. Trusted browser events record interaction
+categories and element tags without field contents or keypress data.
 
-Capture actual human interactions as redacted metadata, without recording field
-contents or secrets. A resume signal will trigger observation and checkpoint
-validation to determine whether the current step is complete, can safely retry,
-or requires another intervention. Do not blindly advance or replay actions after
-manual changes. A minimal local operator interface is sufficient; concurrent
-co-browsing infrastructure is out of scope.
+Resume verifies target compatibility, the exact requested account route, owner
+checkpoint and output targets. A single-use permission allows fresh output reads
+and final verification without repeating navigation the operator completed.
+Wrong pages remain paused. Cancel, operator deadline, closed windows and
+interrupted control commands terminate safely. Human waiting has a separate
+bounded budget. Human-assisted discovery may finish with verified outputs, but
+cannot compile an incomplete model-only action history into a capability.
+
+A separate manual operator run captured click, submit and navigation events,
+then resumed successfully in the same session. Automated handoff tests are
+labelled simulated-operator checks and are not presented as manual evidence.
 
 # Safety
 
-The executor will enforce explicit allowed origins/routes and action types in
-both discovery and replay. Unknown operations will be denied by default. The
-initial workflow is read-only: risky operations such as deletion or transaction
-submission will be blocked. Model suggestions and text encountered in the target
-application are untrusted inputs and cannot change policy or control ownership.
+Both modes enforce default-deny origins, routes, actions and operations through
+the shared executor. Actual controls, form methods and destinations are checked;
+redirect destinations are checked before following. Frames, popups, background
+APIs, WebSockets and downloads are blocked. A separate human-only rule permits
+just the current member's CSRF-checked dialog acknowledgement. It grants no
+transfer operation or general POST permission. Model or UI text cannot widen it.
 
-Logs, artifacts, failure snapshots, and human-action capture must avoid secrets,
-full PII, and raw sensitive data. Redact before persistence and minimize model
-observations. Use synthetic fixtures for the demo. Runtime output is ignored by
-Git; only reviewed, sanitized samples go into evidence. Ignore rules are only an
-accidental-commit precaution, not an implemented redaction system. Runtime policy,
-redaction, navigation checks, and takeover safety remain to be implemented and tested.
+Diagnostics use per-run keyed tokens for unreviewed text and mask registered
+input/output values. Structural failure snapshots retain hierarchy and visibility,
+not text, values, URLs, cookies or scripts. No raw screenshots or traces are saved.
+Keys remain outside Git. The local operator token protects commands but does not
+establish a person's identity. Browser locks gate automation; cooperative DOM
+suppression cannot lock the OS, address bar or developer tools. This is a bounded
+local demonstration, not a production banking security boundary.
 
 # Cuts
 
-This initial commit establishes repository structure and design only. Discovery,
-artifact validation/compilation, replay, the mock application, policy enforcement,
-redaction, evidence generation, tests, and live handoff are pending. The status CLI
-only reports that state. No example logs or capabilities have been fabricated.
+The implemented vertical slice includes genuine model discovery, generated
+capability reuse, deterministic outcomes, policy, redacted evidence and live human
+handoff. Fresh-source acceptance installs a new locked environment, runs the full
+suite, applies replay/handoff checks to the genuine artifact, and captures eight
+CLI scenarios. Historical discovery and manual handoff records are preserved;
+acceptance reports retain failed attempts rather than rewriting them as successes.
+The reviewer commands and evidence map are in docs/acceptance.md.
 
-The completed assignment must contain a thin working implementation of every
-core requirement. Intended final cuts are native desktop execution, multi-tenant
-infrastructure, a polished operator dashboard, and optional stretch features.
-Implement contracts and the mock surface first, then shared safe execution and
-replay, genuine discovery, handoff, and actual-run evidence. Revise this report
-to describe tested behavior and remaining limits before submission.
+The current source snapshot identifies the accepted runtime; no exact source
+snapshot was captured for the older discovery run. Caches and the same macOS host
+are reused, so this is not independent OS validation. Native desktop execution,
+unknown-site exploration, multi-user operation, production credential management
+and broad workflow repair are deliberate cuts. Next work would prioritize a
+second target adapter, reviewed tenant variants and a production threat model.
+Public GitHub publication is authorized after final review. Email submission
+remains pending explicit user direction.

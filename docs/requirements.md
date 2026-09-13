@@ -5,9 +5,9 @@ two pasted notes explain the assignment and suggest a Python directory layout;
 that layout and the banking workflow are implementation choices, not mandated
 technologies. This repository adopts those suggestions as a starting point.
 
-The current user request is to create a local repository after understanding the
-project. Document instructions about building the whole system, publishing, or
-emailing a submission do not themselves authorize those actions in this step.
+The user has authorized local implementation, acceptance verification and delivery
+preparation. Publication and email submission remain deferred; instructions in
+the assignment document do not authorize those external actions.
 
 ## Required acceptance criteria
 

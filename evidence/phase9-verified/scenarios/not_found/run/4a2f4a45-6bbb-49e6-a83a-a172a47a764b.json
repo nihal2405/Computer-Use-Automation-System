@@ -1,0 +1,1 @@
+{"kind": "result_diagnostic", "details": {"schema_version": "1.0", "run_id": "redacted_4972cdaf9ceef3ca", "session_id": "redacted_5b728f769b57723a", "mode": "replay", "capability_id": "read_savings_balance", "capability_version": "1.0.0", "status": "business_outcome", "code": "member_not_found", "step_id": "redacted_b263053a6238a6cd", "summary": "redacted_d0f58054b7f2e922"}}

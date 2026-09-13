@@ -1,14 +1,27 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools==80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "computer-use-automation"
 version = "0.0.1"
-description = "Scaffold for a UI discovery and deterministic replay system"
+description = "Policy-checked UI discovery and deterministic replay system"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "flask>=3.1,<4",
+    "openai>=2,<3",
+    "playwright>=1.50,<2",
+    "pydantic>=2.10,<3",
+    "python-dotenv>=1,<2",
+    "pyyaml>=6,<7",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]
+
+[tool.uv]
+required-version = ">=0.9.13"
 
 [project.scripts]
 computer-use = "computer_use.cli:main"
