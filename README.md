@@ -144,6 +144,8 @@ download and browser caches. [Acceptance guide](docs/acceptance.md)
 - `scripts/`: model-free replay, manual handoff, and acceptance entry points.
 - `evidence/`: inspected run records, generated capabilities, and demo images.
 - `docs/`: component guides and setup notes.
+- [Assignment coverage](docs/requirements.md): the seven core requirements and
+  their implementation guides.
 - [REPORT.md](REPORT.md): design decisions and limitations; also available as a
   [three-page PDF](output/pdf/design-report.pdf).
 

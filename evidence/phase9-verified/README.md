@@ -43,4 +43,4 @@ here: [Phase 7](../phase7/README.md) and [Phase 8](../phase8/README.md) preserve
 those separate actual executions.
 
 Run `python3 scripts/acceptance.py --output runs/another-acceptance` to reproduce.
-See [reviewer commands](../../docs/acceptance.md) and [delivery review](../../docs/delivery.md).
+See [reviewer commands](../../docs/acceptance.md) and the [evidence index](../README.md).

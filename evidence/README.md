@@ -30,6 +30,8 @@ application source are labelled as synthetic.
   retaining its actual outcome category and sanitized diagnostics.
 - [Delivery review](delivery-review.json). Scope and results of the final local
   credential, archive, Git-history, documentation and evidence-integrity review.
+- [Post-commit review](post-commit-review.json). The 349-test verification of
+  implementation commit `0e0c9fe8511dfd878449936d569a87cfb0d815f0`.
 
 Acceptance archives preserve credential-free source snapshots, including synthetic
 mock data and test fixtures. They are reproducibility records, not raw runtime
