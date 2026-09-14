@@ -124,7 +124,7 @@ diagnosis and does not alter the project's `.venv` or start billable model calls
   evidence writes.
 - **Exclusive same-session takeover:** handoff tests against the genuine artifact
   plus the separate [manual operator run](../evidence/phase8/README.md). Automated
-  handoff tests use simulated operators and do not impersonate manual evidence.
+  handoff tests use simulated operators.
 - **Rich failure evidence:** sanitized DOM structure retains tags, roles,
   visibility and hierarchy, without text, field values, URLs or screenshots.
 
@@ -144,4 +144,4 @@ The corrected fresh run passed **349 tests**, **40 genuine-artifact replay/hando
 checks**, and **eight real CLI scenarios**. Read [the verified report](../evidence/phase9-verified/README.md).
 The [first failed attempt](../evidence/phase9/README.md) remains available with its
 original source snapshot and failed test outcome. Its fixture-dependent test setup
-was corrected before the new independent run; no runtime success was fabricated.
+was corrected before the new independent run.

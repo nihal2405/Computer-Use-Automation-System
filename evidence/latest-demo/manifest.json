@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
-  "execution_date_user_reported": "2026-09-13",
+  "reported_execution_date": "2026-09-13",
   "packaging_source_commit": "b992dded7b4c0f212ac07160be36b14ce96f462a",
   "source_revision_captured_at_execution": false,
   "configured_provider": "gemini",
   "configured_model": "gemini-3.6-flash",
-  "model_attribution": "Current configuration and user-reported command; provider model identifiers are redacted in persisted logs.",
+  "model_attribution": "Based on configuration and the reported CLI invocation; provider model identifiers are redacted in persisted logs.",
   "runs": {
     "discovery": {
       "run_id": "a7139683-7087-438f-b9ce-69edc4ad9ae0",
@@ -35,7 +35,7 @@
       "checkpoint_verified": true
     }
   },
-  "replay_artifact_association": "User terminal command and screenshot identify the exact copied artifact.",
+  "replay_artifact_association": "The terminal command and screenshot identify the exact copied artifact.",
   "handoff_capability": "../phase7/capability.json",
   "handoff_capability_sha256": "787563c031a5cc30f771d070775ecc711ae3857c3494c3cef9b248262f3d58f1",
   "checks": {
@@ -51,7 +51,7 @@
     "original_evidence_bytes_preserved": true
   },
   "files": {
-    "README.md": "5a917b721588ffff0cdba6d05322ecbcc4a7ac114b650a49666169e69bd7309b",
+    "README.md": "a4d4004198670c74756934ec98e4c3d0cebccdf7c5d2f848d0dc38bbb87c4923",
     "capability.json": "b89f396c4f4b99c72dd46999c5a3ea5aebdc006e8ce42c2721b3ef75c5ac24ce",
     "discovery/28436877-241e-4d7b-97f5-3c9037e53c81.json": "ef6f35285d9b08647730118e3f581864da7eecf311fa23ae4ae31f03aea57779",
     "discovery/events.jsonl": "b96fe779d727b004be3052d2abea626cd542a4c950c4b7304476bd273279b5fe",

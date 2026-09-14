@@ -41,7 +41,7 @@
   },
   "notes": [
     "Operator identity is not authenticated beyond possession of the local token.",
-    "No assistant or test script issued takeover, dialog acknowledgement, or resume commands in this run.",
+    "Takeover, dialog acknowledgement, and resume were performed manually through the local UI.",
     "Source hashes cover the core runtime; display-only operator UI edits and documentation were finalized after the manual run.",
     "Outputs remain redacted in preserved diagnostic evidence."
   ]

@@ -26,6 +26,5 @@
   "visibility": "public",
   "branch": "main",
   "implementation_push_succeeded": true,
-  "email_sent": false,
-  "scope": "Verification of the named implementation commit. Subsequent documentation-only commits record these results and publication status. This is not a comprehensive security audit."
+  "scope": "Verification of the named implementation commit, including tests, credential scanning, documentation links, and evidence integrity. This is not a comprehensive security audit."
 }

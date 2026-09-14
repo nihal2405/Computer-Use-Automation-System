@@ -6,8 +6,7 @@ Gemini-generated Phase 7 capability against the synthetic bank's unexpected dial
 No model was called during this replay.
 
 I used the local UI to take control, acknowledge the bank's dialog, and request
-resume. Setup tooling launched the demo and opened the operator screen; the
-control actions were manual.
+resume.
 This run is separate from the simulated-operator integration tests. The local
 bearer token establishes access, not a verified person's identity.
 

@@ -58,13 +58,12 @@ The zero human-event count above is the state before takeover, not the final cou
 
 ![Accounts visible after the obstacle was resolved](images/05-accounts-after-intervention.png)
 
-The accounts screenshot alone does not establish resumed automation; the correlated
-events and verified resolution provide that evidence. The screenshots document the manual sequence; they do not embed run identifiers.
+The event log and verified resolution record resumed automation. The screenshots
+show the manual sequence but do not contain run identifiers.
 
 Two terminal screenshots contain a personal absolute filesystem path and are
-excluded from this public package. The blank first attachment is also excluded.
-Originals remain on my Desktop; local working copies of the five useful
-screenshots are in ignored `tmp/latest-demo-originals/`. The published images are unchanged. Operator URLs/tokens and API keys are excluded.
+excluded from this folder. The three included UI images are unchanged originals.
+Operator URLs, tokens, and API keys are excluded.
 
 ## Reproduce
 

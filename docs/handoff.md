@@ -117,10 +117,9 @@ dialog resolution, a human completing an interrupted navigation, unexpected page
 wrong owners, missing outputs, redacted typing, API authorization, narrow POST
 permissions, duplicate resume, one-use verification, active/wait deadlines,
 cancellation, closed windows, interrupted verification, persistence failure, and
-human-assisted discovery without fabricated artifacts.
+human-assisted discovery returning verified outputs without compiling a capability.
 
-These tests drive real browser events with **simulated operators**. They verify
-the implementation but do not claim that a person performed the acceptance demo.
+These tests drive real browser events with **simulated operators**.
 A separate manual operator demonstration also completed successfully; its 53
 sanitized events, original intervention, resolution, failure evidence, and hash
 manifest are preserved in [evidence/phase8](../evidence/phase8/README.md).
