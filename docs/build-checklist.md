@@ -24,8 +24,6 @@ the linked guides; historical test results remain with their original evidence.
 - [x] Verify the replacement-model configuration with a new discovery and replay,
   and collect manual screenshots. [Latest demo](../evidence/latest-demo/README.md)
 - [x] Write setup instructions, the design report, and evidence notes.
-- [x] Publish the reviewed files to GitHub.
-- [ ] Email the repository link according to the assignment's submission instructions.
 
 The first extensions I would consider are a second read-only workflow and a second
 target adapter. Transfers, account changes, supervisor approval, and production

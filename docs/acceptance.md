@@ -137,7 +137,6 @@ These local records are reproducible evidence, not provider-signed attestations.
 The implemented scope remains the reviewed synthetic banking workflow. Desktop
 adapters, arbitrary website discovery, OS-level input locking, and compiling
 human-assisted actions into a model-only capability are outside this version.
-The repository is public; email submission remains outstanding.
 
 ## Recorded acceptance result
 

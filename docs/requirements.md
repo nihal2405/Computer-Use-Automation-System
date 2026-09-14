@@ -32,10 +32,8 @@ in the root README, a 1-3 page report under the seven required headings, and
 an evidence folder containing a generated capability and discovery/replay logs.
 A recording is optional.
 
-The [repository](https://github.com/nihal2405/Computer-Use-Automation-System) is
-public. [Latest evidence](../evidence/latest-demo/README.md) covers discovery,
-second-member replay, and a separate manual handoff. Email submission is still
-outstanding.
+[Latest evidence](../evidence/latest-demo/README.md) covers discovery,
+second-member replay, and a separate manual handoff.
 
 See the [build checklist](build-checklist.md) for implementation status and
 [acceptance guide](acceptance.md) for reproducible checks.

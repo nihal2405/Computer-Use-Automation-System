@@ -1,9 +1,5 @@
 # Delivery
 
-The source, report, and evidence are published at
-[nihal2405/Computer-Use-Automation-System](https://github.com/nihal2405/Computer-Use-Automation-System).
-Email submission is still outstanding.
-
 ## Where to start
 
 - [README](../README.md): installation and runnable demos.

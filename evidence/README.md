@@ -35,7 +35,5 @@ traces. SHA-256 manifests identify source, artifacts and evidence; they are not
 cryptographic attestations from a model provider. The older discovery run did not
 capture a full source snapshot, a limitation retained in the documentation.
 
-No new model run or manual operator action was invented during acceptance.
 Automated handoff tests are simulated-operator checks. Model/API failure attempts
-from development are not presented as successful discoveries. The repository is
-public; email submission remains deferred.
+from development are retained as failed attempts.
