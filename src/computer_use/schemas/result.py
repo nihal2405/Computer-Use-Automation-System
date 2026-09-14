@@ -54,11 +54,25 @@ class BusinessOutcome(RunContext):
 class Failure(RunContext):
     status: Literal["failure"]
     code: Literal[
-        "invalid_input", "incompatible_target", "policy_denied", "target_not_found",
-        "ambiguous_target", "checkpoint_failed", "timeout", "recovery_exhausted",
-        "permission_denied", "session_expired", "application_error", "unknown_state",
-        "step_limit", "no_progress", "invalid_model_response", "cancelled",
-        "invalid_output", "persistence_failed", "model_request_failed",
+        "invalid_input",
+        "incompatible_target",
+        "policy_denied",
+        "target_not_found",
+        "ambiguous_target",
+        "checkpoint_failed",
+        "timeout",
+        "recovery_exhausted",
+        "permission_denied",
+        "session_expired",
+        "application_error",
+        "unknown_state",
+        "step_limit",
+        "no_progress",
+        "invalid_model_response",
+        "cancelled",
+        "invalid_output",
+        "persistence_failed",
+        "model_request_failed",
     ]
     diagnostic: Diagnostic
     intervention_id: Text | None = None

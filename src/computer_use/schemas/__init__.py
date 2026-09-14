@@ -7,7 +7,16 @@ from computer_use.schemas.observation import Observation
 from computer_use.schemas.result import ExecutionResult, result_adapter
 
 __all__ = [
-    "Action", "Target", "Capability", "TargetIdentity", "ControlSnapshot",
-    "ControlTransition", "Intervention", "Observation", "ExecutionResult",
-    "action_adapter", "target_adapter", "result_adapter",
+    "Action",
+    "Target",
+    "Capability",
+    "TargetIdentity",
+    "ControlSnapshot",
+    "ControlTransition",
+    "Intervention",
+    "Observation",
+    "ExecutionResult",
+    "action_adapter",
+    "target_adapter",
+    "result_adapter",
 ]

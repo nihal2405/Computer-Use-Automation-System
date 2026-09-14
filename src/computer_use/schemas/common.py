@@ -13,8 +13,11 @@ Scalar = StrictStr | StrictInt | StrictBool
 
 class Contract(BaseModel):
     model_config = ConfigDict(
-        strict=True, extra="forbid", frozen=True,
-        hide_input_in_errors=True, revalidate_instances="always",
+        strict=True,
+        extra="forbid",
+        frozen=True,
+        hide_input_in_errors=True,
+        revalidate_instances="always",
     )
 
 

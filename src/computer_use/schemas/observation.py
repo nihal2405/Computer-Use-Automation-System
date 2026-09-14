@@ -27,8 +27,15 @@ class Observation(Contract):
     summary: Text
     controls: list[ObservedControl]
     state: Literal[
-        "ready", "loading", "validation_error", "member_not_found", "permission_denied",
-        "session_expired", "unexpected_dialog", "application_error", "unknown",
+        "ready",
+        "loading",
+        "validation_error",
+        "member_not_found",
+        "permission_denied",
+        "session_expired",
+        "unexpected_dialog",
+        "application_error",
+        "unknown",
     ]
     evidence_ref: Text | None = None
 

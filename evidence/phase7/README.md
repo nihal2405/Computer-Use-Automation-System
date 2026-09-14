@@ -1,8 +1,7 @@
 # Verified Gemini discovery and deterministic replay
 
-These files come from actual execution of the local working tree. They are not
-hand-authored workflow examples or model test-double outputs. Nothing has been
-published, and this is not yet the complete assignment submission evidence.
+This is the original Gemini 2.5 Flash discovery and replay run. The artifacts and
+logs are retained as captured. Later runs and acceptance results are linked below.
 
 - [capability.json](capability.json): schema version 1.0, capability version 1.0.0,
   with `provenance: llm_discovery` and explicit invocation references.
@@ -22,8 +21,8 @@ response IDs are also pseudonymized. UUID-named JSON files hold sanitized termin
 diagnostics. The manifest records the actual model configuration; it is not a
 cryptographic attestation from the provider.
 
-At the Phase 7 milestone the full regression suite passed 326 tests. All 21 replay integration checks were
-also run against this exact artifact and passed. For a repeatable second-member
+At this milestone, the regression suite passed 326 tests. All 21 replay integration
+checks were also run against this exact artifact and passed. For a repeatable second-member
 demo with the local bank running:
 
 ```bash

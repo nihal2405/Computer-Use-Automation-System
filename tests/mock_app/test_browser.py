@@ -1,4 +1,4 @@
-"""UI checks against the actual mock target, independent of the future executor."""
+"""Browser checks for the mock app, independent of automation controllers."""
 
 from threading import Thread
 
@@ -78,7 +78,9 @@ def test_invalid_input_is_visible_in_browser(page, member_id):
     expect(page.get_by_label("Member ID", exact=True)).to_have_attribute("aria-invalid", "true")
 
 
-@pytest.mark.parametrize(("scenario", "member_id"), [("normal", "9999"), ("missing_member", "1001")])
+@pytest.mark.parametrize(
+    ("scenario", "member_id"), [("normal", "9999"), ("missing_member", "1001")]
+)
 def test_browser_not_found_scenarios(page, scenario, member_id):
     select_scenario(page, scenario)
     search(page, member_id)
@@ -103,15 +105,20 @@ def test_loading_is_visible_then_results_appear(page):
     expect(page.locator("td.savings-balance")).to_have_text("1250.75")
 
 
-@pytest.mark.parametrize(("scenario", "title", "status"), [
-    ("permission_denied", "Permission denied", 403),
-    ("application_error", "Application unavailable", 503),
-])
+@pytest.mark.parametrize(
+    ("scenario", "title", "status"),
+    [
+        ("permission_denied", "Permission denied", 403),
+        ("application_error", "Application unavailable", 503),
+    ],
+)
 def test_account_failures_render_without_balances(page, scenario, title, status):
     select_scenario(page, scenario)
     search(page, "1001")
     page.get_by_role("link", name="1001", exact=True).click()
-    with page.expect_response(lambda response: response.url.endswith("/members/1001/accounts")) as response:
+    with page.expect_response(
+        lambda response: response.url.endswith("/members/1001/accounts")
+    ) as response:
         page.get_by_role("link", name="Accounts", exact=True).click()
     assert response.value.status == status
     expect(page.get_by_role("heading", name=title, exact=True).first).to_be_visible()

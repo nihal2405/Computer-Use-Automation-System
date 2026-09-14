@@ -1,14 +1,14 @@
 """Structured OpenAI/Gemini transports with fixed endpoints and no hidden retries."""
 
-from dataclasses import dataclass
 import json
 import os
+from dataclasses import dataclass
 from typing import Annotated, Literal
 
-from dotenv import dotenv_values
-from openai import AsyncOpenAI, APIError, APITimeoutError
-from pydantic import Field, ValidationError
 import yaml
+from dotenv import dotenv_values
+from openai import APIError, APITimeoutError, AsyncOpenAI
+from pydantic import Field, ValidationError
 
 from computer_use.discovery.contracts import Decision, response_schema
 from computer_use.discovery.prompts import SYSTEM
@@ -44,10 +44,16 @@ class OpenAIModel:
         if not api_key or not api_key.strip():
             raise ModelError("model_credentials_missing")
         self.settings = ModelSettings.model_validate(settings)
-        endpoint = {"openai": "https://api.openai.com/v1",
-                    "gemini": "https://generativelanguage.googleapis.com/v1beta/openai/"}[self.settings.provider]
-        self._client = AsyncOpenAI(api_key=api_key, base_url=endpoint,
-                                  max_retries=0, timeout=settings.request_timeout_seconds)
+        endpoint = {
+            "openai": "https://api.openai.com/v1",
+            "gemini": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        }[self.settings.provider]
+        self._client = AsyncOpenAI(
+            api_key=api_key,
+            base_url=endpoint,
+            max_retries=0,
+            timeout=self.settings.request_timeout_seconds,
+        )
 
     @classmethod
     def from_project(cls, root):
@@ -55,7 +61,9 @@ class OpenAIModel:
             path = root / "config/discovery.yaml"
             if path.stat().st_size > 131072:
                 raise ValueError()
-            settings = ModelSettings.model_validate(yaml.load(path.read_text(), Loader=_UniqueLoader))
+            settings = ModelSettings.model_validate(
+                yaml.load(path.read_text(), Loader=_UniqueLoader)
+            )
             key_name = {"openai": "OPENAI_API_KEY", "gemini": "GEMINI_API_KEY"}[settings.provider]
             key = os.environ.get(key_name) or dotenv_values(root / ".env").get(key_name)
         except (OSError, ValueError, TypeError, yaml.YAMLError):
@@ -66,24 +74,47 @@ class OpenAIModel:
         try:
             if self.settings.provider == "gemini":
                 response = await self._client.chat.completions.create(
-                    model=self.settings.model, max_tokens=self.settings.max_output_tokens,
+                    model=self.settings.model,
+                    max_tokens=self.settings.max_output_tokens,
                     reasoning_effort=self.settings.reasoning_effort,
-                    messages=[{"role": "system", "content": SYSTEM},
-                              {"role": "user", "content": json.dumps(context)}],
-                    response_format={"type": "json_schema", "json_schema": {
-                        "name": "ui_decision", "strict": True, "schema": response_schema()}},
+                    messages=[
+                        {"role": "system", "content": SYSTEM},
+                        {"role": "user", "content": json.dumps(context)},
+                    ],
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "ui_decision",
+                            "strict": True,
+                            "schema": response_schema(),
+                        },
+                    },
                 )
-                if (not response.choices or response.choices[0].finish_reason != "stop"
-                        or response.choices[0].message.refusal or not response.choices[0].message.content):
+                if (
+                    not response.choices
+                    or response.choices[0].finish_reason != "stop"
+                    or response.choices[0].message.refusal
+                    or not response.choices[0].message.content
+                ):
                     raise ModelError("invalid_model_response")
                 decision = Decision.model_validate_json(response.choices[0].message.content)
                 return ModelReply(decision, response.id, response.model)
             response = await self._client.responses.create(
-                model=self.settings.model, store=False, max_output_tokens=self.settings.max_output_tokens,
-                input=[{"role": "system", "content": SYSTEM},
-                       {"role": "user", "content": json.dumps(context)}],
-                text={"format": {"type": "json_schema", "name": "ui_decision", "strict": True,
-                                 "schema": response_schema()}},
+                model=self.settings.model,
+                store=False,
+                max_output_tokens=self.settings.max_output_tokens,
+                input=[
+                    {"role": "system", "content": SYSTEM},
+                    {"role": "user", "content": json.dumps(context)},
+                ],
+                text={
+                    "format": {
+                        "type": "json_schema",
+                        "name": "ui_decision",
+                        "strict": True,
+                        "schema": response_schema(),
+                    }
+                },
             )
             if response.status != "completed" or not response.output_text:
                 raise ModelError("invalid_model_response")
@@ -92,18 +123,30 @@ class OpenAIModel:
         except APITimeoutError:
             raise ModelError("timeout") from None
         except APIError as error:
-            known = {"invalid_json_schema", "insufficient_quota", "invalid_api_key", "model_not_found",
-                     "rate_limit_exceeded", "unsupported_value", "invalid_request_error"}
+            known = {
+                "invalid_json_schema",
+                "insufficient_quota",
+                "invalid_api_key",
+                "model_not_found",
+                "rate_limit_exceeded",
+                "unsupported_value",
+                "invalid_request_error",
+            }
             reason = getattr(error, "code", None)
             if reason not in known:
                 # Classify only fixed phrases; never propagate raw provider text.
                 message = str(error).lower()
-                if "quota" in message or "billing" in message or "credit" in message:
+                if getattr(error, "status_code", None) == 404:
+                    reason = "model_not_found"
+                elif "quota" in message or "billing" in message or "credit" in message:
                     reason = "insufficient_quota"
                 elif "rate limit" in message or "rate_limit" in message:
                     reason = "rate_limit_exceeded"
-            raise ModelError("model_request_failed", provider_status=getattr(error, "status_code", None),
-                             provider_reason=reason if reason in known else "provider_error") from None
+            raise ModelError(
+                "model_request_failed",
+                provider_status=getattr(error, "status_code", None),
+                provider_reason=reason if reason in known else "provider_error",
+            ) from None
         except (ValidationError, ValueError, TypeError):
             raise ModelError("invalid_model_response") from None
 

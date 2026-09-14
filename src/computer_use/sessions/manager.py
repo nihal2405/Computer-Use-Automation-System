@@ -1,8 +1,8 @@
 """One browser, context, and page survive all operations and ownership changes."""
 
 import asyncio
-from uuid import uuid4
 from urllib.parse import urlsplit
+from uuid import uuid4
 
 from playwright.async_api import async_playwright
 
@@ -20,13 +20,26 @@ class BrowserSession:
     """
 
     def __init__(
-        self, *, base_url: str, target: TargetIdentity, run_id: str,
-        headless: bool = False, timeout_ms: int = 5000, policy=None, versions=None,
+        self,
+        *,
+        base_url: str,
+        target: TargetIdentity,
+        run_id: str,
+        headless: bool = False,
+        timeout_ms: int = 5000,
+        policy=None,
+        versions=None,
     ):
         parts = urlsplit(base_url)
-        if (parts.scheme not in {"http", "https"} or not parts.hostname
-                or parts.username or parts.password or parts.query or parts.fragment
-                or parts.path not in {"", "/"}):
+        if (
+            parts.scheme not in {"http", "https"}
+            or not parts.hostname
+            or parts.username
+            or parts.password
+            or parts.query
+            or parts.fragment
+            or parts.path not in {"", "/"}
+        ):
             raise ValueError("base_url must be an HTTP(S) origin without credentials")
         self._base_url = base_url.rstrip("/")
         self._target = TargetIdentity.model_validate(target)
@@ -56,7 +69,9 @@ class BrowserSession:
     def surface(self) -> BrowserSurface:
         self.control.require_open()
         if self._surface is None:
-            raise SurfaceError("session_not_started", "A started browser session", "Start has not completed")
+            raise SurfaceError(
+                "session_not_started", "A started browser session", "Start has not completed"
+            )
         return self._surface
 
     async def start(self):
@@ -67,9 +82,12 @@ class BrowserSession:
             try:
                 self._playwright = await async_playwright().start()
                 self._browser = await self._playwright.chromium.launch(headless=self._headless)
-                self._context = await self._browser.new_context(service_workers="block", accept_downloads=False)
+                self._context = await self._browser.new_context(
+                    service_workers="block", accept_downloads=False
+                )
                 if self._policy is not None:
                     from computer_use.safety.policy import BrowserBoundary
+
                     self._boundary = BrowserBoundary(self._policy)
                     await self._context.route("**/*", self._boundary.route)
                     await self._context.route_web_socket("**/*", self._boundary.websocket)
@@ -81,8 +99,14 @@ class BrowserSession:
                 self._page.on("close", lambda _: self.control.mark_closed())
                 self._browser.on("disconnected", lambda _: self.control.mark_closed())
                 self._surface = BrowserSurface(
-                    self._page, self.control, base_url=self._base_url, target=self._target,
-                    run_id=self._run_id, timeout_ms=self._timeout_ms, boundary=self._boundary, versions=self._versions,
+                    self._page,
+                    self.control,
+                    base_url=self._base_url,
+                    target=self._target,
+                    run_id=self._run_id,
+                    timeout_ms=self._timeout_ms,
+                    boundary=self._boundary,
+                    versions=self._versions,
                 )
                 self._started = True
             except BaseException:

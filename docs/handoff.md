@@ -83,7 +83,8 @@ send field contents, passwords, keystrokes, text, selectors, IDs, URLs, cookies,
 or arbitrary attributes. Events join the existing ordered run log. The resolution
 links to the original intervention and a separate sanitized human-event summary;
 the `handoff_resolved` event carries the resolution's opaque evidence reference.
-No screenshots, video, browser traces, or raw model transcripts are persisted.
+The capture system saves no screenshots, video, browser traces, or raw model
+transcripts. Manually collected screenshots are reviewed separately.
 
 All browser request boundaries remain active during human control. A separate
 reviewed policy rule permits only the dialog's form-encoded acknowledgement POST
@@ -123,4 +124,5 @@ the implementation but do not claim that a person performed the acceptance demo.
 A separate manual operator demonstration also completed successfully; its 53
 sanitized events, original intervention, resolution, failure evidence, and hash
 manifest are preserved in [evidence/phase8](../evidence/phase8/README.md).
-The complete regression suite passes **345 tests**.
+The [latest manual demo](../evidence/latest-demo/README.md) adds another recorded
+handoff. Test counts in older manifests refer to their original source revisions.

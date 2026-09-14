@@ -66,7 +66,12 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     def account_error(title: str, message: str, status: int, state: str, member):
         return render_template(
-            "error.html", title=title, message=message, status=status, state=state, member=member,
+            "error.html",
+            title=title,
+            message=message,
+            status=status,
+            state=state,
+            member=member,
         ), status
 
     @app.get("/")
@@ -80,13 +85,19 @@ def create_app(test_config: dict | None = None) -> Flask:
             # A new search always clears any previous result and acknowledgement.
             for key in ("last_search", "results_ready_at", "acknowledged_member"):
                 session.pop(key, None)
-            if not re.fullmatch(r"[0-9]{4,10}", member_id) or session["scenario"] == "invalid_input":
+            if (
+                not re.fullmatch(r"[0-9]{4,10}", member_id)
+                or session["scenario"] == "invalid_input"
+            ):
                 message = "Enter a member ID containing 4 to 10 digits."
                 if session["scenario"] == "invalid_input":
                     message = "This demo scenario rejects all searches. Choose Normal workflow to continue."
                 return render_template(
-                    "search.html", title="Member search", state="validation_error",
-                    member_id=member_id[:100], validation_message=message,
+                    "search.html",
+                    title="Member search",
+                    state="validation_error",
+                    member_id=member_id[:100],
+                    validation_message=message,
                 ), 400
             session["last_search"] = member_id
             if session["scenario"] == "slow_loading":
@@ -99,19 +110,27 @@ def create_app(test_config: dict | None = None) -> Flask:
         remaining_ms = int((session.get("results_ready_at", 0) - monotonic()) * 1000)
         if session["scenario"] == "slow_loading" and remaining_ms > 0:
             return render_template(
-                "loading.html", title="Searching members", state="loading",
+                "loading.html",
+                title="Searching members",
+                state="loading",
                 retry_ms=min(max(remaining_ms + 50, 100), 2000),
             )
         member = None if session["scenario"] == "missing_member" else MEMBERS.get(member_id)
         return render_template(
-            "results.html", title="Search results", state="ready" if member else "member_not_found",
-            member=member, member_id=member_id,
+            "results.html",
+            title="Search results",
+            state="ready" if member else "member_not_found",
+            member=member,
+            member_id=member_id,
         )
 
     @app.get("/members/<member_id>")
     def member_detail(member_id: str):
         return render_template(
-            "member.html", title="Member details", state="ready", member=get_member(member_id),
+            "member.html",
+            title="Member details",
+            state="ready",
+            member=get_member(member_id),
         )
 
     @app.route("/members/<member_id>/accounts", methods=["GET", "POST"])
@@ -125,23 +144,37 @@ def create_app(test_config: dict | None = None) -> Flask:
             return redirect(url_for("accounts", member_id=member_id), code=303)
         if active == "permission_denied":
             return account_error(
-                "Permission denied", "Your demo role does not have access to this member's accounts. "
-                "Choose Normal workflow in Demo controls to restore access.", 403, "permission_denied", member,
+                "Permission denied",
+                "Your demo role does not have access to this member's accounts. "
+                "Choose Normal workflow in Demo controls to restore access.",
+                403,
+                "permission_denied",
+                member,
             )
         if active == "session_expired" and not session.get("session_restarted"):
             session["expired"] = True
             return account_error(
-                "Session expired", "The demo session has expired. Restart it, then search for the member again.",
-                401, "session_expired", member,
+                "Session expired",
+                "The demo session has expired. Restart it, then search for the member again.",
+                401,
+                "session_expired",
+                member,
             )
         if active == "application_error":
             return account_error(
-                "Application unavailable", "Account services are temporarily unavailable in this scenario. "
-                "Choose Normal workflow in Demo controls to restore the service.", 503, "application_error", member,
+                "Application unavailable",
+                "Account services are temporarily unavailable in this scenario. "
+                "Choose Normal workflow in Demo controls to restore the service.",
+                503,
+                "application_error",
+                member,
             )
         if active == "unexpected_dialog" and session.get("acknowledged_member") != member_id:
             return render_template(
-                "dialog.html", title="Review required", state="unexpected_dialog", member=member,
+                "dialog.html",
+                title="Review required",
+                state="unexpected_dialog",
+                member=member,
             )
         return render_template("accounts.html", title="Accounts", state="ready", member=member)
 
@@ -152,12 +185,21 @@ def create_app(test_config: dict | None = None) -> Flask:
             if selected not in SCENARIOS:
                 abort(400, description="Choose a scenario from the list.")
             # Retain session identity; clear workflow state so every scenario is repeatable.
-            for key in ("last_search", "results_ready_at", "acknowledged_member", "expired", "session_restarted"):
+            for key in (
+                "last_search",
+                "results_ready_at",
+                "acknowledged_member",
+                "expired",
+                "session_restarted",
+            ):
                 session.pop(key, None)
             session["scenario"] = selected
             return redirect(url_for("search"), code=303)
         return render_template(
-            "demo.html", title="Demo controls", state="ready", scenarios=SCENARIOS.values(),
+            "demo.html",
+            title="Demo controls",
+            state="ready",
+            scenarios=SCENARIOS.values(),
         )
 
     @app.post("/session/restart")
@@ -171,12 +213,22 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.errorhandler(400)
     def bad_request(error):
-        return render_template("error.html", title="Request could not be completed",
-                               message=error.description, status=400, state="validation_error"), 400
+        return render_template(
+            "error.html",
+            title="Request could not be completed",
+            message=error.description,
+            status=400,
+            state="validation_error",
+        ), 400
 
     @app.errorhandler(404)
     def not_found(error):
-        return render_template("error.html", title="Page not found",
-                               message="This page or synthetic member does not exist.", status=404, state="unknown"), 404
+        return render_template(
+            "error.html",
+            title="Page not found",
+            message="This page or synthetic member does not exist.",
+            status=404,
+            state="unknown",
+        ), 404
 
     return app

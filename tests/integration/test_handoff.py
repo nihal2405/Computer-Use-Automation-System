@@ -1,14 +1,14 @@
 """Real browser events from simulated operators; manual runs are labelled separately."""
 
 import asyncio
-from contextlib import asynccontextmanager
 import json
+from contextlib import asynccontextmanager
 
 import httpx
 import pytest
-
-from test_replay import bank, engine, async_test, CapabilityStore, ARTIFACT
 from test_discovery import agent
+from test_replay import ARTIFACT, CapabilityStore, async_test, engine
+
 from computer_use.handoff.coordinator import HandoffCoordinator
 from computer_use.handoff.operator import OperatorServer
 from computer_use.observability.evidence import PersistenceError
@@ -36,7 +36,10 @@ async def paused(bank, tmp_path, *, discovery=False, capability=None, wait_timeo
 
 
 def events(runner):
-    return [json.loads(line) for line in (runner.executor.store.directory / "events.jsonl").read_text().splitlines()]
+    return [
+        json.loads(line)
+        for line in (runner.executor.store.directory / "events.jsonl").read_text().splitlines()
+    ]
 
 
 def resolutions(runner):
@@ -55,14 +58,24 @@ async def test_operator_ui_transfers_same_session_and_captures_real_browser_even
         session = runner.executor.session_id
         server = OperatorServer(control)
         try:
-            async with httpx.AsyncClient(base_url=server.origin, headers={"Authorization": "Bearer " + server.token}) as client:
+            async with httpx.AsyncClient(
+                base_url=server.origin, headers={"Authorization": "Bearer " + server.token}
+            ) as client:
                 assert (await client.get("/api/state")).json()["state"] == "AWAITING_HUMAN"
-                assert (await client.post("/api/command", json={"command": "resume"})).status_code == 409
-                assert (await client.post("/api/command", json={"command": "takeover"})).json()["state"] == "HUMAN_CONTROL"
-                assert (await runner.executor.execute_step(runner.capability.steps[0])).code == "ownership_denied"
+                assert (
+                    await client.post("/api/command", json={"command": "resume"})
+                ).status_code == 409
+                assert (await client.post("/api/command", json={"command": "takeover"})).json()[
+                    "state"
+                ] == "HUMAN_CONTROL"
+                assert (
+                    await runner.executor.execute_step(runner.capability.steps[0])
+                ).code == "ownership_denied"
                 await page.get_by_role("button", name="Continue to accounts", exact=True).click()
                 await page.locator("td.savings-balance").wait_for()
-                assert (await client.post("/api/command", json={"command": "resume"})).json()["state"] == "AUTOMATION_RUNNING"
+                assert (await client.post("/api/command", json={"command": "resume"})).json()[
+                    "state"
+                ] == "AUTOMATION_RUNNING"
             result = await asyncio.wait_for(run, 5)
             assert result.status == "success" and result.outputs["balance"] == "8040.20", result
             assert runner.executor.session_id == session and runner.executor._session._page is page
@@ -101,10 +114,19 @@ async def test_human_can_complete_interrupted_navigation_without_repeating_it(ba
     # condition explicitly so this scenario exercises either artifact equally.
     accounts_step = next(step for step in data["steps"] if step["operation"] == "open_accounts")
     accounts_step["precondition"] = {
-        "kind": "visible", "target": {"strategy": "role", "role": "heading",
-        "name": {"source": "literal", "value": "Accounts"},
-        "rationale": "Test obstacle before account navigation"}}
-    async with paused(bank, tmp_path, capability=Capability.model_validate(data)) as (runner, control, run):
+        "kind": "visible",
+        "target": {
+            "strategy": "role",
+            "role": "heading",
+            "name": {"source": "literal", "value": "Accounts"},
+            "rationale": "Test obstacle before account navigation",
+        },
+    }
+    async with paused(bank, tmp_path, capability=Capability.model_validate(data)) as (
+        runner,
+        control,
+        run,
+    ):
         assert not any(path.endswith("/accounts") for _, path in bank["requests"])
         await control.command("takeover")
         page = runner.executor._session._page
@@ -112,7 +134,9 @@ async def test_human_can_complete_interrupted_navigation_without_repeating_it(ba
         await page.get_by_role("button", name="Continue to accounts", exact=True).click()
         await control.command("resume")
         assert (await asyncio.wait_for(run, 5)).status == "success"
-        assert bank["requests"].count(("GET", "/members/2002/accounts")) == 2  # Click plus acknowledgement redirect, no repeated automation click.
+        assert (
+            bank["requests"].count(("GET", "/members/2002/accounts")) == 2
+        )  # Click plus acknowledgement redirect, no repeated automation click.
 
 
 @pytest.mark.parametrize("takeover", [False, True])
@@ -133,15 +157,23 @@ async def test_human_input_values_never_enter_event_payloads_or_disk(bank, tmp_p
     async with paused(bank, tmp_path) as (runner, control, run):
         await control.command("takeover")
         page = runner.executor._session._page
-        await page.evaluate("document.querySelector('dialog').insertAdjacentHTML('beforeend','<input aria-label=Secret type=password>')")
+        await page.evaluate(
+            "document.querySelector('dialog').insertAdjacentHTML('beforeend','<input aria-label=Secret type=password>')"
+        )
         await page.get_by_label("Secret").click()
         await page.get_by_label("Secret").press_sequentially("super-private-password-123")
         await control.capture.flush()
         await control.command("cancel")
         await run
         text = "\n".join(p.read_text() for p in runner.executor.store.directory.iterdir())
-        assert "super-private-password-123" not in text and '"value"' not in json.dumps([e for e in events(runner) if e["event"] == "human_interaction"])
-        assert any(e["details"].get("interaction") == "input" for e in events(runner) if e["event"] == "human_interaction")
+        assert "super-private-password-123" not in text and '"value"' not in json.dumps(
+            [e for e in events(runner) if e["event"] == "human_interaction"]
+        )
+        assert any(
+            e["details"].get("interaction") == "input"
+            for e in events(runner)
+            if e["event"] == "human_interaction"
+        )
 
 
 @async_test
@@ -151,23 +183,41 @@ async def test_operator_api_rejects_foreign_origins_hosts_and_tokens(bank, tmp_p
         try:
             async with httpx.AsyncClient(base_url=server.origin) as client:
                 assert (await client.get("/api/state")).status_code == 403
-                assert (await client.get("/api/state", headers={"Authorization": "Bearer wrong"})).status_code == 403
+                assert (
+                    await client.get("/api/state", headers={"Authorization": "Bearer wrong"})
+                ).status_code == 403
                 good = {"Authorization": "Bearer " + server.token}
-                assert (await client.post("/api/command", headers={**good, "Origin": "https://evil.example"}, json={"command": "cancel"})).status_code == 403
-                assert (await client.get("/api/state", headers={**good, "Host": "evil.example"})).status_code == 403
-                assert (await client.post("/api/command", headers=good, json={"command": "execute"})).status_code == 400
+                assert (
+                    await client.post(
+                        "/api/command",
+                        headers={**good, "Origin": "https://evil.example"},
+                        json={"command": "cancel"},
+                    )
+                ).status_code == 403
+                assert (
+                    await client.get("/api/state", headers={**good, "Host": "evil.example"})
+                ).status_code == 403
+                assert (
+                    await client.post("/api/command", headers=good, json={"command": "execute"})
+                ).status_code == 400
                 response = await client.get("/api/state", headers=good)
-                assert response.status_code == 200 and response.headers["Cache-Control"] == "no-store"
+                assert (
+                    response.status_code == 200 and response.headers["Cache-Control"] == "no-store"
+                )
         finally:
             await server.close()
 
 
 @async_test
-async def test_discovery_handoff_returns_verified_outputs_without_fabricating_artifact(bank, tmp_path):
+async def test_discovery_handoff_returns_verified_outputs_without_fabricating_artifact(
+    bank, tmp_path
+):
     async with paused(bank, tmp_path, discovery=True) as (runner, control, run):
         model_calls = len(runner.model.contexts)
         await control.command("takeover")
-        await runner.executor._session._page.get_by_role("button", name="Continue to accounts", exact=True).click()
+        await runner.executor._session._page.get_by_role(
+            "button", name="Continue to accounts", exact=True
+        ).click()
         await control.command("resume")
         result = await asyncio.wait_for(run, 5)
         assert result.status == "success" and result.outputs["balance"] == "1250.75", result
@@ -181,7 +231,9 @@ async def test_operator_wait_does_not_consume_active_execution_budget(bank, tmp_
         runner.executor._started_at -= 121
         control._wait_started -= 121
         await control.command("takeover")
-        await runner.executor._session._page.get_by_role("button", name="Continue to accounts", exact=True).click()
+        await runner.executor._session._page.get_by_role(
+            "button", name="Continue to accounts", exact=True
+        ).click()
         await control.command("resume")
         assert (await asyncio.wait_for(run, 5)).status == "success"
 
@@ -193,11 +245,15 @@ async def test_operator_deadline_cancels_the_run(bank, tmp_path):
 
 
 @async_test
-async def test_capture_persistence_failure_stops_instead_of_losing_human_history(bank, tmp_path, monkeypatch):
+async def test_capture_persistence_failure_stops_instead_of_losing_human_history(
+    bank, tmp_path, monkeypatch
+):
     async with paused(bank, tmp_path) as (runner, control, run):
         await control.command("takeover")
+
         def broken(*args, **kwargs):
             raise PersistenceError()
+
         monkeypatch.setattr(runner.executor.store, "_write", broken)
         page = runner.executor._session._page
         try:
@@ -209,7 +265,13 @@ async def test_capture_persistence_failure_stops_instead_of_losing_human_history
         assert runner.executor._session._browser is None
 
 
-@pytest.mark.parametrize("mutation", ["document.querySelector('.accounts-member-id').textContent='9999'", "document.querySelector('td.savings-balance').remove()"])
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "document.querySelector('.accounts-member-id').textContent='9999'",
+        "document.querySelector('td.savings-balance').remove()",
+    ],
+)
 @async_test
 async def test_wrong_owner_or_missing_output_prevents_resume(bank, tmp_path, mutation):
     async with paused(bank, tmp_path) as (runner, control, run):
@@ -224,8 +286,12 @@ async def test_wrong_owner_or_missing_output_prevents_resume(bank, tmp_path, mut
 @async_test
 async def test_dialog_cannot_be_acknowledged_before_takeover(bank, tmp_path):
     async with paused(bank, tmp_path) as (runner, control, run):
-        await runner.executor._session._page.get_by_role("button", name="Continue to accounts", exact=True).click()
-        assert not any(method == "POST" and path.endswith("/accounts") for method, path in bank["requests"])
+        await runner.executor._session._page.get_by_role(
+            "button", name="Continue to accounts", exact=True
+        ).click()
+        assert not any(
+            method == "POST" and path.endswith("/accounts") for method, path in bank["requests"]
+        )
         assert runner.executor.control.state == "AWAITING_HUMAN"
 
 
@@ -246,11 +312,18 @@ async def test_human_permission_cannot_be_used_for_another_member_or_payload(ban
 async def test_duplicate_resume_is_rejected_and_outputs_are_read_once(bank, tmp_path):
     async with paused(bank, tmp_path) as (runner, control, run):
         await control.command("takeover")
-        await runner.executor._session._page.get_by_role("button", name="Continue to accounts", exact=True).click()
-        responses = await asyncio.gather(control.command("resume"), control.command("resume"), return_exceptions=True)
+        await runner.executor._session._page.get_by_role(
+            "button", name="Continue to accounts", exact=True
+        ).click()
+        responses = await asyncio.gather(
+            control.command("resume"), control.command("resume"), return_exceptions=True
+        )
         assert sum(isinstance(item, ValueError) for item in responses) == 1
         assert (await asyncio.wait_for(run, 5)).status == "success"
-        assert len([e for e in events(runner) if e["event"] == "completed" and e["action"] == "read"]) == 2
+        assert (
+            len([e for e in events(runner) if e["event"] == "completed" and e["action"] == "read"])
+            == 2
+        )
 
 
 @async_test
@@ -268,9 +341,11 @@ async def test_interrupted_verification_closes_browser_and_cancels(bank, tmp_pat
     async with paused(bank, tmp_path) as (runner, control, run):
         await control.command("takeover")
         checking = asyncio.Event()
+
         async def interrupted():
             checking.set()
             await asyncio.Future()
+
         monkeypatch.setattr(control, "_verify_resume", interrupted)
         command = asyncio.create_task(control.command("resume"))
         await asyncio.wait_for(checking.wait(), 3)

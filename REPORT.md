@@ -1,122 +1,125 @@
 # Architecture
 
-This system discovers and replays a savings-balance lookup against a local Flask
-bank containing synthetic members. The workflow is search, member record,
-accounts, then balance and currency. Python controllers share one executor and
-one Playwright/Chromium surface. Keeping orchestration in one asyncio process
-makes browser lifetime and exclusive control explicit without introducing queues
-or services that the demonstration does not need.
+I built a small system that learns a browser workflow once and reuses it without
+asking a model to plan each run. The example is a savings-balance lookup in a
+Flask app with two fictional members. Python handles orchestration, and
+Playwright drives Chromium. One asyncio process owns the browser so actions,
+timeouts, and control transfers have a clear order.
 
-Discovery accepts a goal and reviewed target configuration. Gemini or OpenAI
-returns structured actions; validation and policy run before execution. Gemini
-2.5 Flash supplied six actual decisions in the preserved discovery run. The model
-sees reviewed control descriptions and live visibility/state flags, with input
-references instead of member values. It chooses the sequence within an approved
-vocabulary; it does not discover arbitrary locators on unknown websites. This
-limits generality while keeping model output and application text untrusted.
+Discovery and replay share an executor. Before an action reaches the browser,
+the executor validates its contract, binds inputs, checks policy and ownership,
+and applies a deadline. After execution it checks conditions and records a
+sanitized result. Keeping those checks in one place prevents the two modes from
+developing different permission rules.
+
+Discovery uses Gemini or OpenAI to select actions from a reviewed control
+vocabulary and live visibility/state observations. Inputs are represented as
+references rather than member values in the model context. The model chooses
+the sequence; it does not invent locators on an unknown site. This constraint
+made it possible to test the complete workflow and its failure cases.
 
 # Artifact schema
 
-Pydantic contracts describe schema version, capability identity/version, compatible
-target, typed inputs/outputs, ordered steps, locator rationale, parameter
-references, success checkpoint, business outcomes, and bounded recovery rules.
-The balance is a validated decimal string, avoiding binary floating-point loss.
-Unknown actions, incompatible versions, missing inputs, bad references, and
-undeclared outputs are rejected before execution.
+A capability is a JSON document with a schema version, capability ID and version,
+compatible target, typed inputs and outputs, ordered steps, and a success
+checkpoint. It can also declare business outcomes and bounded wait recovery.
+Each step includes an operation, action, target, and timeout. The loader rejects
+duplicate keys, oversized files, invalid references, and unsupported versions.
 
-Compilation includes only successful actions and restores input references from
-known policy templates, never by replacing every matching string. The artifact
-is independent of the transcript and has explicit provenance and a discovery run
-ID. Genuine artifacts and hand-authored fixtures remain distinct. Immutable files
-and SHA-256 manifests support review and correlation; provenance is not a
-provider-signed attestation. Replay uses the same artifact for a different member
-and reads that member's current UI values.
+I kept member IDs and decimal balances as strings to preserve leading zeros and
+avoid floating-point rounding. Compilation records only actions that executed
+successfully. Input references come from matching reviewed templates, not global
+replacement of strings that happen to match an example value. The resulting
+artifact is independent of the model transcript.
+
+Generated artifacts carry a discovery run ID. Hand-authored fixtures are labelled
+separately. Run IDs and file hashes let a reviewer correlate the evidence, but
+they are not a provider-signed attestation.
 
 # Determinism & error handling
 
-Replay binds inputs and follows recorded steps without model decisions. Exact
-scoped roles/labels are preferred; reviewed CSS identifies legacy-style balance
-cells. Missing or ambiguous controls fail rather than selecting the first match.
-Condition-based waits share step deadlines. Success requires typed outputs and
-a visible account-owner checkpoint; completed clicks alone are insufficient.
+Replay binds new inputs and follows the stored sequence without model calls.
+Targets must match exactly one control. Scoped roles and labels are preferred;
+reviewed CSS handles the balance cells. Missing or ambiguous matches stop the
+run. Success requires typed outputs and a visible checkpoint identifying the
+requested account owner.
 
-The result separates success, member-not-found, and hard failures such as denied
-permission, session expiry, app errors, invalid input, and failed checkpoints.
-Known loading permits bounded waits, with no repeated search submission. Exhausted
-recovery stops and requests intervention. Discovery additionally limits steps,
-elapsed time, invalid responses and repeated states. Model declarations cannot
-supply the result. Persistence failure closes the browser instead of reporting
-an unaudited success.
+Results distinguish success, a business outcome such as member-not-found, and
+failure. Permission denial, expired sessions, application errors, invalid inputs,
+and failed checkpoints retain separate codes. Recovery is limited to bounded
+condition waits for known loading states. It never resubmits a search or repeats
+a click to see whether it works.
+
+Discovery also has step, elapsed-time, invalid-response, and no-progress limits.
+A model cannot declare an answer without UI evidence. Errors retain the stopped
+step and expected/observed context. Failure to store diagnostics closes the browser.
 
 # Heterogeneity & multi-tenant
 
-Controllers use a surface contract rather than Playwright objects. A desktop
-adapter could resolve OS accessibility controls, with reviewed screenshot or
-coordinate targeting where accessibility is absent. Legacy frames require
-explicit frame scopes and separately tested navigation boundaries. Neither
-adapter is implemented; silently guessing visual targets would weaken safety.
+The controllers use a surface interface rather than Playwright objects. A desktop
+adapter could implement the same operations with OS accessibility APIs. Legacy
+frames or inaccessible visual controls would need explicit scopes or reviewed
+visual targeting, plus their own boundary tests. Those adapters are not built.
 
-Tenant reuse would retain the capability while applying reviewed origin,
-identity, locator and operation configuration for a compatible app version. Each
-run already has an isolated browser context. Product/version markers and exact
-route checks reject incompatible targets; markers assume a cooperating app and
-are not authentication. New tenants need contract tests and policy review before
-reuse. A deployed tenant registry, credential vault and cross-tenant compatibility
-matrix are future infrastructure, not features claimed by this demonstration.
+Tenant reuse would keep the workflow while applying reviewed origin, target
+identity, locator, and operation settings for a compatible application version.
+Each run already has a separate browser context. Product/version checks reject
+incompatible pages, although the current markers assume a cooperating app and
+are not authentication.
+
+I did not build a tenant registry, credential vault, or compatibility matrix.
+Those would be needed before claiming safe reuse across production tenants.
 
 # Escalation & handoff
 
-Interactive runs keep the existing browser alive and expose a token-protected
-loopback operator screen with goal, stopped action, reason and sanitized context.
-Ownership proceeds through AUTOMATION_RUNNING, AWAITING_HUMAN, HUMAN_CONTROL and
-RESUME_CHECK. Automation dispatch is blocked during human ownership; cookies,
-page and session identity survive. Trusted browser events record interaction
-categories and element tags without field contents or keypress data.
+When an interactive run is blocked, a local operator page shows the goal, stopped
+action, reason, and sanitized context. The existing Chromium session stays open.
+Control moves from automation to awaiting-human, human-control, and resume-check.
+Automation dispatch is blocked while the person owns the session.
 
-Resume verifies target compatibility, the exact requested account route, owner
-checkpoint and output targets. A single-use permission allows fresh output reads
-and final verification without repeating navigation the operator completed.
-Wrong pages remain paused. Cancel, operator deadline, closed windows and
-interrupted control commands terminate safely. Human waiting has a separate
-bounded budget. Human-assisted discovery may finish with verified outputs, but
-cannot compile an incomplete model-only action history into a capability.
+Browser listeners record interaction categories and element types, not field
+contents or keystrokes. Before resuming, the coordinator checks target identity,
+the exact member's accounts route, owner checkpoint, and output controls. It then
+grants a single-use resume permission and rereads the outputs. A wrong page or an
+unresolved dialog remains paused. Cancel and operator deadlines end the run.
 
-A separate manual operator run captured click, submit and navigation events,
-then resumed successfully in the same session. Automated handoff tests are
-labelled simulated-operator checks and are not presented as manual evidence.
+This resume strategy is specific to the savings workflow. Human-assisted
+discovery can return verified outputs, but it does not compile a partial model
+history into a capability that pretends to include the person's actions.
 
 # Safety
 
-Both modes enforce default-deny origins, routes, actions and operations through
-the shared executor. Actual controls, form methods and destinations are checked;
-redirect destinations are checked before following. Frames, popups, background
-APIs, WebSockets and downloads are blocked. A separate human-only rule permits
-just the current member's CSRF-checked dialog acknowledgement. It grants no
-transfer operation or general POST permission. Model or UI text cannot widen it.
+Both modes use a default-deny allowlist for origins, routes, actions, and
+operations. The executor checks actual controls and form destinations.
+Chromium request interception blocks unapproved redirects, frames, popups,
+background APIs, WebSockets, and downloads. A separate human rule permits only
+the current member's CSRF-checked dialog acknowledgement.
 
-Diagnostics use per-run keyed tokens for unreviewed text and mask registered
-input/output values. Structural failure snapshots retain hierarchy and visibility,
-not text, values, URLs, cookies or scripts. No raw screenshots or traces are saved.
-Keys remain outside Git. The local operator token protects commands but does not
-establish a person's identity. Browser locks gate automation; cooperative DOM
-suppression cannot lock the OS, address bar or developer tools. This is a bounded
-local demonstration, not a production banking security boundary.
+Logs replace unreviewed text and registered inputs/outputs with per-run keyed
+tokens. Failure snapshots keep DOM hierarchy, tags, visibility, and disabled state,
+without text, values, URLs, cookies, or scripts. Runtime capture saves no raw
+screenshots or traces. Manually collected demo images are reviewed before
+publication and labelled as synthetic data.
+
+The operator token restricts local commands; it does not verify a person's
+identity. Browser ownership checks cannot lock the OS, address bar, developer
+tools, or extensions. These are boundaries for a local demonstration, not a
+production banking security model.
 
 # Cuts
 
-The implemented vertical slice includes genuine model discovery, generated
-capability reuse, deterministic outcomes, policy, redacted evidence and live human
-handoff. Fresh-source acceptance installs a new locked environment, runs the full
-suite, applies replay/handoff checks to the genuine artifact, and captures eight
-CLI scenarios. Historical discovery and manual handoff records are preserved;
-acceptance reports retain failed attempts rather than rewriting them as successes.
-The reviewer commands and evidence map are in docs/acceptance.md.
+The completed example covers discovery, generated-artifact reuse, model-free
+replay, error handling, policy, redaction, and same-session handoff. The latest
+manual demonstration includes six model responses, replay for the second member,
+and a separate handoff using the earlier capability. Fresh-environment acceptance
+also records exceptional CLI outcomes and retains the first failed attempt.
 
-The current source snapshot identifies the accepted runtime; no exact source
-snapshot was captured for the older discovery run. Caches and the same macOS host
-are reused, so this is not independent OS validation. Native desktop execution,
-unknown-site exploration, multi-user operation, production credential management
-and broad workflow repair are deliberate cuts. Next work would prioritize a
-second target adapter, reviewed tenant variants and a production threat model.
-Public GitHub publication is authorized after final review. Email submission
-remains pending explicit user direction.
+Historical runs did not capture a full source snapshot at discovery time.
+Acceptance archives identify the source they tested; they cannot establish an
+older run's exact revision. The checks reuse the same macOS host and can reuse
+download caches.
+
+I kept the scope to one read-only workflow. Arbitrary-site exploration, desktop
+execution, account-changing operations, multi-user control, and general workflow
+repair remain outside this version. My next extension would be a second target
+adapter, with the same contracts and acceptance checks.

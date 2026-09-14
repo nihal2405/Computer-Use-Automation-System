@@ -6,7 +6,8 @@ import secrets
 
 from pydantic import BaseModel
 
-SAFE_WORDS = set("""
+SAFE_WORDS = set(
+    """
 schema_version capability_version id description provenance discovery_run_id target inputs outputs
 steps success_checkpoint business_outcomes recovery_rules product versions surface operation action balance currency
 path strategy role name label text selector scope rationale value source ref literal input
@@ -36,18 +37,36 @@ collected_outputs permitted_actions feedback requested_step response_received ar
 human_interaction handoff_requested resume_rejected handoff_resolved interaction tag role input_type
 input change click submit focus navigation select textarea password checkbox radio search text
 human_actions_ref action resume complete abort operator_id state_verified verification resume_step_id
-""".split())
-SAFE_WORDS.update({
-    "An explicitly approved operation and destination", "Policy blocked this operation",
-    "Exactly one target", "Multiple targets matched", "Target is absent",
-    "Exactly one scope", "Multiple scopes matched", "Scope is absent",
-    "Checkpoint condition satisfied", "Condition is false", "Deadline elapsed",
-    "Operation within its deadline", "Automation ownership for this operation",
-    "Configured product and version markers", "Missing or incompatible UI identity",
-    "A validated step", "Invalid step contract", "An open browser session", "Session is closed",
-    "Steps within the configured limit", "Step limit reached", "An uninterrupted operation",
-    "Caller cancelled execution", "Execution within configured limits",
-})
+""".split()
+)
+SAFE_WORDS.update(
+    {
+        "An explicitly approved operation and destination",
+        "Policy blocked this operation",
+        "Exactly one target",
+        "Multiple targets matched",
+        "Target is absent",
+        "Exactly one scope",
+        "Multiple scopes matched",
+        "Scope is absent",
+        "Checkpoint condition satisfied",
+        "Condition is false",
+        "Deadline elapsed",
+        "Operation within its deadline",
+        "Automation ownership for this operation",
+        "Configured product and version markers",
+        "Missing or incompatible UI identity",
+        "A validated step",
+        "Invalid step contract",
+        "An open browser session",
+        "Session is closed",
+        "Steps within the configured limit",
+        "Step limit reached",
+        "An uninterrupted operation",
+        "Caller cancelled execution",
+        "Execution within configured limits",
+    }
+)
 
 
 class Redactor:
@@ -87,8 +106,10 @@ class Redactor:
             # Numbers in arbitrary content may be balances, account numbers, or PINs.
             return self.token(str(value))
         if isinstance(value, dict):
-            return {self.text(str(key)): self.sanitize(item, _depth=_depth + 1)
-                    for key, item in list(value.items())[:1000]}
+            return {
+                self.text(str(key)): self.sanitize(item, _depth=_depth + 1)
+                for key, item in list(value.items())[:1000]
+            }
         if isinstance(value, (list, tuple)):
             return [self.sanitize(item, _depth=_depth + 1) for item in value[:1000]]
         raise ValueError("Unsupported persistence value")

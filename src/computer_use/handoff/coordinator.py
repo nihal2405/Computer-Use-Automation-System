@@ -3,13 +3,14 @@
 import asyncio
 from time import monotonic
 from urllib.parse import urlsplit
+
 from playwright.async_api import Error as BrowserError
 
 from computer_use.handoff.capture import HumanCapture
+from computer_use.observability.evidence import PersistenceError
 from computer_use.schemas.intervention import Resolution
 from computer_use.schemas.result import Diagnostic, Failure
 from computer_use.surfaces.base import SurfaceError
-from computer_use.observability.evidence import PersistenceError
 
 
 class HandoffCoordinator:
@@ -41,12 +42,19 @@ class HandoffCoordinator:
             self._decision.set_exception(PersistenceError())
 
     def consume_resume(self, start):
-        if self.executor.control.state != "AUTOMATION_RUNNING" or self._resume_ticket != (start, self.executor.session_id):
+        if self.executor.control.state != "AUTOMATION_RUNNING" or self._resume_ticket != (
+            start,
+            self.executor.session_id,
+        ):
             raise ValueError("Resume requires a fresh verified operator handoff")
         self._resume_ticket = None
 
     def _human_request(self, request):
-        if self.executor.control.state != "HUMAN_CONTROL" or self._decision is None or self._decision.done():
+        if (
+            self.executor.control.state != "HUMAN_CONTROL"
+            or self._decision is None
+            or self._decision.done()
+        ):
             return False
         if self.capture.failed:
             return False
@@ -54,18 +62,26 @@ class HandoffCoordinator:
         return True
 
     def _event(self, name, *, evidence_ref=None, **details):
-        self.executor.store.event(event=name, control_state=self.executor.control.state,
-                                  evidence_ref=evidence_ref, details=details)
+        self.executor.store.event(
+            event=name,
+            control_state=self.executor.control.state,
+            evidence_ref=evidence_ref,
+            details=details,
+        )
 
     async def status(self):
         record = self.engine.intervention
-        return {"state": self.executor.control.state, "run_id": self.executor.run_id,
-                "session_id": self.executor.session_id, "notice": self.notice,
-                "goal": "Retrieve the requested member's savings balance and currency",
-                "step_action": self.engine._last_step.action.action if self.engine._last_step else None,
-                "intervention": record.model_dump(mode="json") if record else None,
-                "human_events": self.capture.count,
-                "result": {"status": self.engine.result.status} if self.engine.result else None}
+        return {
+            "state": self.executor.control.state,
+            "run_id": self.executor.run_id,
+            "session_id": self.executor.session_id,
+            "notice": self.notice,
+            "goal": "Retrieve the requested member's savings balance and currency",
+            "step_action": self.engine._last_step.action.action if self.engine._last_step else None,
+            "intervention": record.model_dump(mode="json") if record else None,
+            "human_events": self.capture.count,
+            "result": {"status": self.engine.result.status} if self.engine.result else None,
+        }
 
     async def handle(self, engine, failure):
         self._count += 1
@@ -83,11 +99,17 @@ class HandoffCoordinator:
         await self.capture.install()
         await self.capture.mode("AWAITING_HUMAN")
         self.session._boundary.human_authorizer = self._human_request
-        self.notice = "Paused: " + engine.intervention.context.state + ". Take control, resolve the bank page, then request resume."
+        self.notice = (
+            "Paused: "
+            + engine.intervention.context.state
+            + ". Take control, resolve the bank page, then request resume."
+        )
         self._event("handoff_requested", intervention_id=failure.intervention_id)
         self.ready.set()
         try:
-            action, start = await asyncio.wait_for(asyncio.shield(self._decision), self.wait_timeout)
+            action, start = await asyncio.wait_for(
+                asyncio.shield(self._decision), self.wait_timeout
+            )
         except TimeoutError:
             await self.command("cancel")
             action, start = "abort", None
@@ -95,11 +117,18 @@ class HandoffCoordinator:
         finally:
             self.session._boundary.human_authorizer = None
         if action == "abort":
-            result = Failure(**engine._run_context(), status="failure", code="cancelled",
-                diagnostic=failure.diagnostic, intervention_id=failure.intervention_id)
+            result = Failure(
+                **engine._run_context(),
+                status="failure",
+                code="cancelled",
+                diagnostic=failure.diagnostic,
+                intervention_id=failure.intervention_id,
+            )
             return await engine._finish(result)
         if deadline is not None:
-            remaining = self.executor._started_at + self.config.runtime.run_timeout_seconds - monotonic()
+            remaining = (
+                self.executor._started_at + self.config.runtime.run_timeout_seconds - monotonic()
+            )
             deadline.reschedule(asyncio.get_running_loop().time() + max(0.001, remaining))
         return await engine.resume_verified(start)
 
@@ -109,9 +138,12 @@ class HandoffCoordinator:
     async def _verify_resume(self):
         # A different permitted page is still the wrong place to resume this task.
         observation = await self.executor.inspect_runtime()
-        if (observation.state != "ready" or observation.target.product != self.contract.target.product
-                or observation.target.version not in self.contract.target.versions
-                or urlsplit(self.session._page.url).path != self._account_path()):
+        if (
+            observation.state != "ready"
+            or observation.target.product != self.contract.target.product
+            or observation.target.version not in self.contract.target.versions
+            or urlsplit(self.session._page.url).path != self._account_path()
+        ):
             raise ValueError("Requested member accounts page is required")
         if not await self.executor.check_condition(self.contract.success_checkpoint):
             raise ValueError("Account owner checkpoint is not satisfied")
@@ -146,7 +178,9 @@ class HandoffCoordinator:
                 await self.session.close()
                 if self._decision is not None and not self._decision.done():
                     try:
-                        await self.executor.transition("FAILED", "Operator command interrupted; session closed")
+                        await self.executor.transition(
+                            "FAILED", "Operator command interrupted; session closed"
+                        )
                         self._resolve("abort", None, verified=False)
                         self._decision.set_result(("abort", None))
                     except PersistenceError:
@@ -168,10 +202,14 @@ class HandoffCoordinator:
             if command == "takeover":
                 if self.executor.control.state != "AWAITING_HUMAN":
                     raise ValueError("Takeover requires a paused run")
-                await self.executor.transition("HUMAN_CONTROL", "Operator accepted exclusive control")
+                await self.executor.transition(
+                    "HUMAN_CONTROL", "Operator accepted exclusive control"
+                )
                 await self.capture.mode("HUMAN_CONTROL")
                 await self.session._page.bring_to_front()
-                self.notice = "You control the existing bank window. Resolve it, then request resume."
+                self.notice = (
+                    "You control the existing bank window. Resolve it, then request resume."
+                )
                 return await self.status()
             if command not in {"resume", "cancel"}:
                 raise ValueError("Unknown operator command")
@@ -186,7 +224,9 @@ class HandoffCoordinator:
                     self._decision.set_result(("abort", None))
                     self.notice = "Cancelled; no further automation actions"
                     return await self.status()
-                await self.executor.transition("RESUME_CHECK", "Operator returned control for verification")
+                await self.executor.transition(
+                    "RESUME_CHECK", "Operator returned control for verification"
+                )
                 self.executor.exclude_operator_wait(monotonic() - self._wait_started)
                 self._wait_started = monotonic()
                 try:
@@ -197,7 +237,9 @@ class HandoffCoordinator:
                     self.notice = "Resume rejected: the requested account page and outputs must be visible. Take control to correct the page."
                     self._event("resume_rejected", code="checkpoint_failed")
                     return await self.status()
-                await self.executor.transition("AUTOMATION_RUNNING", "Requested account page and outputs verified")
+                await self.executor.transition(
+                    "AUTOMATION_RUNNING", "Requested account page and outputs verified"
+                )
                 self._resolve("resume", step_id, verified=True)
                 await self.capture.mode("AUTOMATION_RUNNING")
                 self._resume_ticket = (start, self.executor.session_id)
@@ -212,11 +254,26 @@ class HandoffCoordinator:
 
     def _resolve(self, action, step_id, *, verified):
         record = self.engine.intervention
-        reference = self.executor.store.diagnostic("human_event", {"count": self.capture.count, "run_id": self.executor.run_id})
-        resolution = Resolution(action=action, operator_id="local_operator", summary="Operator handoff " + action,
-            human_actions_ref=reference, state_verified=verified, resume_step_id=step_id,
-            verification=Diagnostic(step_id=record.step_id, expected="Requested account owner and all output targets visible",
-                                    observed="Checkpoint and read targets verified") if verified else None)
-        resolved = record.model_copy(update={"control": self.executor.control, "resolution": resolution})
+        reference = self.executor.store.diagnostic(
+            "human_event", {"count": self.capture.count, "run_id": self.executor.run_id}
+        )
+        resolution = Resolution(
+            action=action,
+            operator_id="local_operator",
+            summary="Operator handoff " + action,
+            human_actions_ref=reference,
+            state_verified=verified,
+            resume_step_id=step_id,
+            verification=Diagnostic(
+                step_id=record.step_id,
+                expected="Requested account owner and all output targets visible",
+                observed="Checkpoint and read targets verified",
+            )
+            if verified
+            else None,
+        )
+        resolved = record.model_copy(
+            update={"control": self.executor.control, "resolution": resolution}
+        )
         evidence_ref = self.executor.save_resolution(resolved)
         self._event("handoff_resolved", action=action, evidence_ref=evidence_ref)

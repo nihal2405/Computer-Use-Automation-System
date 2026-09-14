@@ -2,14 +2,13 @@
 
 import asyncio
 import hmac
-import secrets
 import json
+import secrets
 import sys
 from threading import Thread
 
-from flask import Flask, jsonify, request, Response
-from werkzeug.serving import make_server, WSGIRequestHandler
-
+from flask import Flask, Response, jsonify, request
+from werkzeug.serving import WSGIRequestHandler, make_server
 
 PAGE = """<!doctype html><html lang="en"><meta charset="utf-8"><title>Automation operator</title>
 <style>body{font:16px system-ui;max-width:900px;margin:40px auto;padding:20px;background:#f5f7fa;color:#152536}button{padding:12px 18px;margin:8px 8px 8px 0;border:0;border-radius:8px;background:#176b65;color:white;cursor:pointer}button:disabled{opacity:.35}pre{white-space:pre-wrap;background:white;padding:20px;border-radius:10px}#notice{padding:16px;background:#e1eeeb}small{color:#526070}</style>
@@ -39,21 +38,33 @@ class OperatorServer:
         self.token = secrets.token_urlsafe(32)
         app = Flask("local_handoff_operator")
         app.config["MAX_CONTENT_LENGTH"] = 2048
-        self.server = make_server("127.0.0.1", port, app, threaded=True, request_handler=QuietHandler)
+        self.server = make_server(
+            "127.0.0.1", port, app, threaded=True, request_handler=QuietHandler
+        )
         self.origin = f"http://127.0.0.1:{self.server.server_port}"
         self.url = self.origin + "/#" + self.token
 
         @app.before_request
         def protect():
-            if request.host != f"127.0.0.1:{self.server.server_port}" or request.headers.get("Origin", self.origin) != self.origin:
+            if (
+                request.host != f"127.0.0.1:{self.server.server_port}"
+                or request.headers.get("Origin", self.origin) != self.origin
+            ):
                 return jsonify(error="Untrusted request origin"), 403
-            if request.path.startswith("/api/") and not hmac.compare_digest(request.headers.get("Authorization", ""), "Bearer " + self.token):
+            if request.path.startswith("/api/") and not hmac.compare_digest(
+                request.headers.get("Authorization", ""), "Bearer " + self.token
+            ):
                 return jsonify(error="Operator authorization required"), 403
 
         @app.after_request
         def headers(response):
-            response.headers.update({"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
-                "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"})
+            response.headers.update(
+                {
+                    "Cache-Control": "no-store",
+                    "X-Content-Type-Options": "nosniff",
+                    "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+                }
+            )
             return response
 
         @app.get("/")
@@ -75,8 +86,12 @@ class OperatorServer:
         @app.post("/api/command")
         def command():
             data = request.get_json(silent=True)
-            if (not isinstance(data, dict) or set(data) != {"command"} or not isinstance(data["command"], str)
-                    or data["command"] not in {"takeover", "resume", "cancel", "focus"}):
+            if (
+                not isinstance(data, dict)
+                or set(data) != {"command"}
+                or not isinstance(data["command"], str)
+                or data["command"] not in {"takeover", "resume", "cancel", "focus"}
+            ):
                 return jsonify(error="Invalid operator command"), 400
             return dispatch(coordinator.command(data["command"]))
 
@@ -92,6 +107,7 @@ class OperatorServer:
 
 async def run_interactive(engine, *, wait_timeout=900):
     from computer_use.handoff.coordinator import HandoffCoordinator
+
     async with engine:
         coordinator = HandoffCoordinator(engine, wait_timeout=wait_timeout)
         operator = OperatorServer(coordinator)

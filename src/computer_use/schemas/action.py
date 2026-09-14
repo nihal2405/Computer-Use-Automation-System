@@ -29,8 +29,20 @@ class TargetBase(Contract):
 class RoleTarget(TargetBase):
     strategy: Literal["role"]
     role: Literal[
-        "button", "link", "textbox", "heading", "cell", "row", "table",
-        "region", "dialog", "status", "alert", "tab", "tabpanel", "combobox",
+        "button",
+        "link",
+        "textbox",
+        "heading",
+        "cell",
+        "row",
+        "table",
+        "region",
+        "dialog",
+        "status",
+        "alert",
+        "tab",
+        "tabpanel",
+        "combobox",
     ]
     name: TextValue
 
@@ -91,13 +103,20 @@ class Navigate(Contract):
             decoded = new
         parts = urlsplit(decoded)
         if (
-            not decoded.startswith("/") or decoded.startswith("//")
-            or parts.scheme or parts.netloc or parts.query or parts.fragment
-            or "\\" in decoded or "%" in decoded
+            not decoded.startswith("/")
+            or decoded.startswith("//")
+            or parts.scheme
+            or parts.netloc
+            or parts.query
+            or parts.fragment
+            or "\\" in decoded
+            or "%" in decoded
             or any(part in (".", "..") for part in parts.path.split("/"))
             or any(character.isspace() or ord(character) < 32 for character in decoded)
         ):
-            raise ValueError("Navigation requires an absolute application path without query or fragment")
+            raise ValueError(
+                "Navigation requires an absolute application path without query or fragment"
+            )
         return value
 
 

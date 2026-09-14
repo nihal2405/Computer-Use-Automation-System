@@ -7,8 +7,12 @@ import sys
 
 class NoModel(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, *args):
-        if (fullname.split(".")[0] in {"openai", "anthropic", "litellm", "mock_app"}
-                or fullname.startswith(("computer_use.discovery", "google.genai", "google.generativeai"))):
+        if fullname.split(".")[0] in {
+            "openai",
+            "anthropic",
+            "litellm",
+            "mock_app",
+        } or fullname.startswith(("computer_use.discovery", "google.genai", "google.generativeai")):
             raise RuntimeError("Model or mock-app import forbidden during replay verification")
 
 
@@ -17,7 +21,7 @@ for name in list(os.environ):
     if name.endswith("_API_KEY"):
         del os.environ[name]
 
-from computer_use.cli import main
+from computer_use.cli import main  # noqa: E402 -- install import guards before loading replay
 
 sys.argv.insert(1, "replay")
 sys.exit(main())

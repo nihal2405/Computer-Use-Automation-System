@@ -14,19 +14,27 @@ class Recorder:
 
     def normalize(self, requested):
         requested = Step.model_validate(requested)
-        if requested.action.action in {"click", "fill", "navigate"} and any(s.action.action == "read" for s in self.steps):
+        if requested.action.action in {"click", "fill", "navigate"} and any(
+            s.action.action == "read" for s in self.steps
+        ):
             raise ValueError("Mutations after extraction would invalidate collected outputs")
         for candidate in self.candidates:
             if candidate.operation != requested.operation:
                 continue
-            if canonical(bind_references(candidate.action, self.inputs)) != canonical(bind_references(requested.action, self.inputs)):
+            if canonical(bind_references(candidate.action, self.inputs)) != canonical(
+                bind_references(requested.action, self.inputs)
+            ):
                 continue
-            if candidate.action.action == "read" and candidate.action.output != requested.action.output:
+            if (
+                candidate.action.action == "read"
+                and candidate.action.output != requested.action.output
+            ):
                 continue
             if requested.precondition is not None or requested.postcondition is not None:
                 raise ValueError("Model conditions require independent review; use task checkpoint")
             if candidate.action.action == "read" and any(
-                s.action.action == "read" and s.action.output == candidate.action.output for s in self.steps
+                s.action.action == "read" and s.action.output == candidate.action.output
+                for s in self.steps
             ):
                 raise ValueError("An output was already extracted")
             # Copy the explicit input references from the matching permission.

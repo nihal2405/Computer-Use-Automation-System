@@ -5,8 +5,22 @@ from typing import Annotated, Literal, Self
 from pydantic import Field, model_validator
 
 from computer_use.schemas.action import Action, Condition, Read, Timeout, input_references
-from computer_use.schemas.common import Contract, Identifier, Scalar, Text, ValueSpec, Version, check_values
-from computer_use.schemas.result import BusinessOutcome, ExecutionResult, Failure, Success, result_adapter
+from computer_use.schemas.common import (
+    Contract,
+    Identifier,
+    Scalar,
+    Text,
+    ValueSpec,
+    Version,
+    check_values,
+)
+from computer_use.schemas.result import (
+    BusinessOutcome,
+    ExecutionResult,
+    Failure,
+    Success,
+    result_adapter,
+)
 
 
 class TargetIdentity(Contract):
@@ -90,7 +104,9 @@ class Capability(Contract):
             codes = [rule.code for rule in rules]
             if len(codes) != len(set(codes)):
                 raise ValueError("Outcome and recovery codes must be unique within each category")
-        if {rule.code for rule in self.business_outcomes} & {rule.code for rule in self.recovery_rules}:
+        if {rule.code for rule in self.business_outcomes} & {
+            rule.code for rule in self.recovery_rules
+        }:
             raise ValueError("A code cannot be both a business outcome and a recovery condition")
         return self
 

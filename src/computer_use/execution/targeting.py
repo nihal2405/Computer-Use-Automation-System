@@ -16,7 +16,9 @@ def bind_references(contract: BaseModel, inputs: Mapping[str, str] | None) -> di
                 name = value["ref"].removeprefix("inputs.")
                 if name not in values or type(values[name]) is not str:
                     raise SurfaceError(
-                        "invalid_input", "A string for every referenced input", "Missing or invalid input",
+                        "invalid_input",
+                        "A string for every referenced input",
+                        "Missing or invalid input",
                     )
                 return {"source": "literal", "value": values[name]}
             return {key: bind(item) for key, item in value.items()}

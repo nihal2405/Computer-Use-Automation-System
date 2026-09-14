@@ -1,7 +1,7 @@
 """Trusted action rules and a context-wide, default-deny browser request boundary."""
 
 import re
-from urllib.parse import urljoin, parse_qs
+from urllib.parse import parse_qs, urljoin
 
 from playwright.async_api import Error as DriverError
 
@@ -12,12 +12,20 @@ from computer_use.surfaces.base import SurfaceError
 
 
 def denied():
-    return SurfaceError("policy_denied", "An explicitly approved operation and destination", "Policy blocked this operation")
+    return SurfaceError(
+        "policy_denied",
+        "An explicitly approved operation and destination",
+        "Policy blocked this operation",
+    )
 
 
 def canonical(value):
     if isinstance(value, dict):
-        return {k: canonical(v) for k, v in value.items() if k not in {"rationale", "output", "timeout_ms"} and v is not None}
+        return {
+            k: canonical(v)
+            for k, v in value.items()
+            if k not in {"rationale", "output", "timeout_ms"} and v is not None
+        }
     if isinstance(value, list):
         return [canonical(v) for v in value]
     return value
@@ -31,10 +39,16 @@ class Policy:
 
     def inputs(self, values):
         if not isinstance(values, dict) or set(values) != set(self._settings.input_patterns):
-            raise SurfaceError("invalid_input", "Exactly the configured inputs", "Input names do not match")
+            raise SurfaceError(
+                "invalid_input", "Exactly the configured inputs", "Input names do not match"
+            )
         for key, pattern in self._settings.input_patterns.items():
             if type(values[key]) is not str or re.fullmatch(pattern, values[key]) is None:
-                raise SurfaceError("invalid_input", "Inputs matching the configured types and patterns", "Input validation failed")
+                raise SurfaceError(
+                    "invalid_input",
+                    "Inputs matching the configured types and patterns",
+                    "Input validation failed",
+                )
         return dict(values)
 
     def url(self, url, *, method="GET", resource=False):
@@ -43,7 +57,9 @@ class Policy:
         except ValueError:
             raise denied() from None
         rules = self._settings.resources if resource else self._settings.navigation
-        if origin not in self._origins or not any(method in r.methods and re.fullmatch(r.path, path) for r in rules):
+        if origin not in self._origins or not any(
+            method in r.methods and re.fullmatch(r.path, path) for r in rules
+        ):
             raise denied()
 
     def authorize(self, action, operation, inputs, current_url, base_url):
@@ -77,16 +93,23 @@ class Policy:
     def human_request(self, request, inputs):
         """Narrow banking acknowledgement permission, invoked only under human ownership."""
         origin, path = split_url(request.url)
-        if (origin not in self._origins or path != f"/members/{inputs.get('member_id')}/accounts"
-                or len(request.post_data or "") > 16_384
-                or not request.headers.get("content-type", "").startswith("application/x-www-form-urlencoded")):
+        if (
+            origin not in self._origins
+            or path != f"/members/{inputs.get('member_id')}/accounts"
+            or len(request.post_data or "") > 16_384
+            or not request.headers.get("content-type", "").startswith(
+                "application/x-www-form-urlencoded"
+            )
+        ):
             raise denied()
         fields = parse_qs(request.post_data or "", keep_blank_values=True, max_num_fields=10)
         for rule in self._settings.human_requests:
             if request.method == rule.method and re.fullmatch(rule.path, path):
-                if (set(fields) == set(rule.fields) | set(rule.ignored_fields)
-                        and all(fields.get(k) == [v] for k, v in rule.fields.items())
-                        and all(len(fields[k]) == 1 for k in rule.ignored_fields)):
+                if (
+                    set(fields) == set(rule.fields) | set(rule.ignored_fields)
+                    and all(fields.get(k) == [v] for k, v in rule.fields.items())
+                    and all(len(fields[k]) == 1 for k in rule.ignored_fields)
+                ):
                     return
         raise denied()
 
@@ -100,16 +123,25 @@ class Policy:
                 raise denied()
             if metadata["tag"] == "A":
                 self.url(metadata["href"])
-            elif metadata["tag"] in {"BUTTON", "INPUT"} and metadata["type"] == "submit" and metadata["form_action"]:
+            elif (
+                metadata["tag"] in {"BUTTON", "INPUT"}
+                and metadata["type"] == "submit"
+                and metadata["form_action"]
+            ):
                 self.url(metadata["form_action"], method=metadata["method"])
             else:
                 # Arbitrary JavaScript-only controls require a reviewed adapter extension.
                 raise denied()
-            if re.search(r"\b(delete|remove|transfer|withdraw|pay|payment|purchase|send money)\b", metadata["text"], re.I):
+            if re.search(
+                r"\b(delete|remove|transfer|withdraw|pay|payment|purchase|send money)\b",
+                metadata["text"],
+                re.I,
+            ):
                 raise denied()
 
     def vocabulary(self):
         """Only operator-reviewed constants may survive text redaction verbatim."""
+
         def strings(value):
             if isinstance(value, str):
                 yield value
@@ -120,6 +152,7 @@ class Policy:
             elif isinstance(value, list):
                 for item in value:
                     yield from strings(item)
+
         return set(strings(self._settings.model_dump())) | set(self._settings.input_patterns)
 
 
@@ -139,7 +172,9 @@ class BrowserBoundary:
         self._cdp.on("Fetch.requestPaused", self._response)
         # Playwright routing does not intercept every redirect hop. Pause responses
         # before Chromium follows Location; never proxy/reissue application requests.
-        await self._cdp.send("Fetch.enable", {"patterns": [{"urlPattern": "*", "requestStage": "Response"}]})
+        await self._cdp.send(
+            "Fetch.enable", {"patterns": [{"urlPattern": "*", "requestStage": "Response"}]}
+        )
 
     async def _response(self, event):
         request_id = event["requestId"]
@@ -147,7 +182,10 @@ class BrowserBoundary:
             request = event["request"]
             status = event.get("responseStatusCode", 0)
             headers = event.get("responseHeaders", [])
-            if self.blocked or any(h["name"].lower() == "content-disposition" and "attachment" in h["value"].lower() for h in headers):
+            if self.blocked or any(
+                h["name"].lower() == "content-disposition" and "attachment" in h["value"].lower()
+                for h in headers
+            ):
                 raise denied()
             if status in {301, 302, 303, 307, 308}:
                 locations = [h["value"] for h in headers if h["name"].lower() == "location"]
@@ -158,13 +196,18 @@ class BrowserBoundary:
                     method = "GET"
                 if method != "GET":  # Never repeat a submission via 307/308.
                     raise denied()
-                self.policy.url(urljoin(request["url"], locations[0]), method=method,
-                                resource=event.get("resourceType") != "Document")
+                self.policy.url(
+                    urljoin(request["url"], locations[0]),
+                    method=method,
+                    resource=event.get("resourceType") != "Document",
+                )
             await self._cdp.send("Fetch.continueRequest", {"requestId": request_id})
         except (SurfaceError, DriverError, ValueError, KeyError):
             self.blocked = True
             try:
-                await self._cdp.send("Fetch.failRequest", {"requestId": request_id, "errorReason": "BlockedByClient"})
+                await self._cdp.send(
+                    "Fetch.failRequest", {"requestId": request_id, "errorReason": "BlockedByClient"}
+                )
             except DriverError:
                 pass  # Context shutdown may have already cancelled the paused request.
 
@@ -177,11 +220,20 @@ class BrowserBoundary:
             if self.blocked or self.page is None or request.frame != self.page.main_frame:
                 raise denied()
             navigation = request.is_navigation_request()
-            if not navigation and request.resource_type not in {"stylesheet", "script", "image", "font"}:
+            if not navigation and request.resource_type not in {
+                "stylesheet",
+                "script",
+                "image",
+                "font",
+            }:
                 raise denied()
             # Only a currently authorized submission may send a POST. Background
             # requests cannot borrow permission after an operation finishes.
-            human = request.method != "GET" and self.human_authorizer is not None and self.human_authorizer(request)
+            human = (
+                request.method != "GET"
+                and self.human_authorizer is not None
+                and self.human_authorizer(request)
+            )
             if not human:
                 if request.method != "GET":
                     if self.submission != (request.method, split_url(request.url)):

@@ -4,7 +4,10 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from computer_use.schemas.intervention import (
-    OWNERS, ControlSnapshot, ControlState, ControlTransition,
+    OWNERS,
+    ControlSnapshot,
+    ControlState,
+    ControlTransition,
 )
 from computer_use.surfaces.base import SurfaceError
 
@@ -12,7 +15,9 @@ from computer_use.surfaces.base import SurfaceError
 class SessionControl:
     def __init__(self, session_id: str):
         self._snapshot = ControlSnapshot(
-            session_id=session_id, state="AUTOMATION_RUNNING", owner="automation",
+            session_id=session_id,
+            state="AUTOMATION_RUNNING",
+            owner="automation",
         )
         self._lock = asyncio.Lock()
         self._closed = False
@@ -37,7 +42,9 @@ class SessionControl:
             state = self._snapshot.state
             if state != "AUTOMATION_RUNNING" and not (inspect_only and state == "RESUME_CHECK"):
                 raise SurfaceError(
-                    "ownership_denied", "Automation ownership for this operation", state,
+                    "ownership_denied",
+                    "Automation ownership for this operation",
+                    state,
                 )
             yield
 
@@ -48,7 +55,9 @@ class SessionControl:
             if state != "FAILED":
                 self.require_open()
             after = ControlSnapshot(
-                session_id=self._snapshot.session_id, state=state, owner=OWNERS.get(state, "none"),
+                session_id=self._snapshot.session_id,
+                state=state,
+                owner=OWNERS.get(state, "none"),
             )
             transition = ControlTransition(before=self._snapshot, after=after, reason=reason)
             if self.on_transition is not None:

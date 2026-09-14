@@ -1,15 +1,16 @@
 """Live browser adapter; contains all Playwright-specific targeting and observation."""
 
 import asyncio
-from contextlib import asynccontextmanager
 import json
 import re
+from contextlib import asynccontextmanager
 from time import monotonic
 from urllib.parse import urlsplit
 
-from playwright.async_api import Error as DriverError, TimeoutError as DriverTimeout
-from pydantic import TypeAdapter, ValidationError
 import yaml
+from playwright.async_api import Error as DriverError
+from playwright.async_api import TimeoutError as DriverTimeout
+from pydantic import TypeAdapter, ValidationError
 
 from computer_use.execution.targeting import bind_references
 from computer_use.schemas.action import Condition, action_adapter
@@ -18,17 +19,38 @@ from computer_use.surfaces.base import SurfaceError
 
 condition_adapter = TypeAdapter(Condition)
 _ROLES = {
-    "button", "link", "textbox", "heading", "cell", "row", "table", "region",
-    "dialog", "status", "alert", "tab", "tabpanel", "combobox",
+    "button",
+    "link",
+    "textbox",
+    "heading",
+    "cell",
+    "row",
+    "table",
+    "region",
+    "dialog",
+    "status",
+    "alert",
+    "tab",
+    "tabpanel",
+    "combobox",
 }
 _STATES = {
-    "ready", "loading", "validation_error", "member_not_found", "permission_denied",
-    "session_expired", "unexpected_dialog", "application_error", "unknown",
+    "ready",
+    "loading",
+    "validation_error",
+    "member_not_found",
+    "permission_denied",
+    "session_expired",
+    "unexpected_dialog",
+    "application_error",
+    "unknown",
 }
 
 
 class BrowserSurface:
-    def __init__(self, page, control, *, base_url, target, run_id, timeout_ms, boundary=None, versions=None):
+    def __init__(
+        self, page, control, *, base_url, target, run_id, timeout_ms, boundary=None, versions=None
+    ):
         self._page = page
         self._control = control
         self._base_url = base_url
@@ -45,7 +67,9 @@ class BrowserSurface:
             try:
                 self._boundary.check()
                 self._boundary.policy.inputs(inputs)
-                self._boundary.policy.authorize(action, operation, inputs, self._page.url, self._base_url)
+                self._boundary.policy.authorize(
+                    action, operation, inputs, self._page.url, self._base_url
+                )
                 self.policy_decision = "allowed"
             except SurfaceError as error:
                 if error.code == "policy_denied":
@@ -58,8 +82,15 @@ class BrowserSurface:
             version: document.documentElement.dataset.version,
             state: document.body?.dataset.state
         })""")
-        if metadata.get("product") != self._identity.product or metadata.get("version") not in self._versions:
-            raise SurfaceError("incompatible_target", "Configured product and version markers", "Missing or incompatible UI identity")
+        if (
+            metadata.get("product") != self._identity.product
+            or metadata.get("version") not in self._versions
+        ):
+            raise SurfaceError(
+                "incompatible_target",
+                "Configured product and version markers",
+                "Missing or incompatible UI identity",
+            )
         return metadata
 
     def _check_boundary(self):
@@ -100,14 +131,20 @@ class BrowserSurface:
                             await asyncio.shield(self._page.context.close())
                         raise
         except (TimeoutError, DriverTimeout):
-            raise SurfaceError("timeout", "Operation within its deadline", "Deadline elapsed") from None
+            raise SurfaceError(
+                "timeout", "Operation within its deadline", "Deadline elapsed"
+            ) from None
         except DriverError as error:
             if self._page.is_closed() or not self._page.context.browser.is_connected():
                 self._control.mark_closed()
-                raise SurfaceError("session_closed", "A live browser", "Browser or page closed") from None
+                raise SurfaceError(
+                    "session_closed", "A live browser", "Browser or page closed"
+                ) from None
             # The original message can contain field values, DOM fragments, and URLs.
             code = "ambiguous_target" if "strict mode violation" in str(error) else "browser_error"
-            raise SurfaceError(code, "One actionable target on a live page", "Browser operation rejected") from None
+            raise SurfaceError(
+                code, "One actionable target on a live page", "Browser operation rejected"
+            ) from None
 
     @staticmethod
     def _bind(adapter, value, inputs):
@@ -115,13 +152,19 @@ class BrowserSurface:
             validated = adapter.validate_python(value)
             return adapter.validate_python(bind_references(validated, inputs))
         except (ValidationError, TypeError, ValueError):
-            raise SurfaceError("invalid_input", "A valid bound operation", "Invalid contract or input") from None
+            raise SurfaceError(
+                "invalid_input", "A valid bound operation", "Invalid contract or input"
+            ) from None
 
     @staticmethod
     def _css(selector):
         # Never accept Playwright engine chains, XPath, or implicit frame traversal.
         if ">>" in selector or selector.startswith(("xpath=", "text=", "css=", "//")):
-            raise SurfaceError("unsupported_target", "A CSS selector in the current document", "Unsupported selector syntax")
+            raise SurfaceError(
+                "unsupported_target",
+                "A CSS selector in the current document",
+                "Unsupported selector syntax",
+            )
         return "css=" + selector
 
     async def _locate(self, target, *, allow_missing=False):
@@ -130,7 +173,9 @@ class BrowserSurface:
             root = self._page.locator(self._css(target.scope))
             count = await root.count()
             if count > 1:
-                raise SurfaceError("ambiguous_target", "Exactly one scope", "Multiple scopes matched")
+                raise SurfaceError(
+                    "ambiguous_target", "Exactly one scope", "Multiple scopes matched"
+                )
             if count == 0:
                 if allow_missing:
                     return None
@@ -159,12 +204,20 @@ class BrowserSurface:
             return not visible
         if condition.kind == "visible":
             return visible
-        return visible and (await locator.inner_text(timeout=self._remaining(deadline))).strip() == condition.expected.value
+        return (
+            visible
+            and (await locator.inner_text(timeout=self._remaining(deadline))).strip()
+            == condition.expected.value
+        )
 
     async def evaluate(self, condition, inputs=None, *, timeout_ms=None, operation=None):
         bound = self._bind(condition_adapter, condition, inputs)
         async with self._operation(timeout_ms, inspect_only=True) as deadline:
-            self._authorize(action_adapter.validate_python({"action": "verify", "condition": bound}), operation, inputs)
+            self._authorize(
+                action_adapter.validate_python({"action": "verify", "condition": bound}),
+                operation,
+                inputs,
+            )
             result = await self._evaluate(bound, deadline)
             self._check_boundary()
             return result
@@ -176,7 +229,9 @@ class BrowserSurface:
         if bound.action == "wait":
             budget = bound.timeout_ms if timeout_ms is None else min(budget, bound.timeout_ms)
         inspecting = bound.action in {"read", "wait", "verify"}
-        async with self._operation(budget, inspect_only=inspecting, mutating=not inspecting) as deadline:
+        async with self._operation(
+            budget, inspect_only=inspecting, mutating=not inspecting
+        ) as deadline:
             self._authorize(bound, operation, inputs)
             try:
                 if self._boundary is not None and self._page.url != "about:blank":
@@ -193,29 +248,42 @@ class BrowserSurface:
     async def _execute_bound(self, bound, deadline):
         result = None
         if bound.action == "navigate":
-            await self._page.goto(self._base_url + bound.path, wait_until="domcontentloaded", timeout=self._remaining(deadline))
+            await self._page.goto(
+                self._base_url + bound.path,
+                wait_until="domcontentloaded",
+                timeout=self._remaining(deadline),
+            )
         elif bound.action == "wait":
             while not await self._evaluate(bound.condition, deadline):
                 # Poll observable state, with one deadline across every attempt.
                 await asyncio.sleep(min(0.025, self._remaining(deadline) / 1000))
         elif bound.action == "verify":
             if not await self._evaluate(bound.condition, deadline):
-                raise SurfaceError("checkpoint_failed", "Checkpoint condition satisfied", "Condition is false")
+                raise SurfaceError(
+                    "checkpoint_failed", "Checkpoint condition satisfied", "Condition is false"
+                )
         else:
             locator = await self._locate(bound.target)
             if self._boundary is not None and bound.action in {"fill", "click"}:
-                metadata = await locator.evaluate("""el => ({
+                metadata = await locator.evaluate(
+                    """el => ({
                     tag: el.tagName, type: el.type || '', href: el.href || '',
                     download: el.hasAttribute('download'),
                     target: el.getAttribute('formtarget') || el.getAttribute('target') || el.form?.target || '',
                     form_action: el.hasAttribute('formaction') ? el.formAction : (el.form?.action || ''),
                     method: (el.getAttribute('formmethod') || el.form?.method || 'get').toUpperCase(),
                     text: el.innerText || el.getAttribute('aria-label') || ''
-                })""", timeout=self._remaining(deadline))
+                })""",
+                    timeout=self._remaining(deadline),
+                )
                 self._boundary.policy.control(bound, metadata)
                 if bound.action == "click" and metadata["tag"] != "A":
                     from computer_use.safety.urls import split_url
-                    self._boundary.submission = (metadata["method"], split_url(metadata["form_action"]))
+
+                    self._boundary.submission = (
+                        metadata["method"],
+                        split_url(metadata["form_action"]),
+                    )
             if bound.action == "click":
                 await locator.click(timeout=self._remaining(deadline))
             elif bound.action == "fill":
@@ -233,7 +301,9 @@ class BrowserSurface:
         async with self._operation(timeout_ms, inspect_only=True) as deadline:
             self._check_boundary()
             metadata = await self._check_identity()
-            snapshot = await self._page.locator("body").aria_snapshot(timeout=self._remaining(deadline))
+            snapshot = await self._page.locator("body").aria_snapshot(
+                timeout=self._remaining(deadline)
+            )
             controls = []
             seen = set()
 
@@ -261,24 +331,34 @@ class BrowserSurface:
                 # Discovery observations must not advertise an ambiguous actionable target.
                 if await locator.count() != 1 or not await locator.is_visible():
                     continue
-                controls.append(ObservedControl(
-                    id=f"control_{len(controls)}", visible=True, enabled=await locator.is_enabled(),
-                    text=name, target={
-                        "strategy": "role", "role": role,
-                        "name": {"source": "literal", "value": name},
-                        "rationale": "Unique visible role and exact accessible name at observation time",
-                    },
-                ))
+                controls.append(
+                    ObservedControl(
+                        id=f"control_{len(controls)}",
+                        visible=True,
+                        enabled=await locator.is_enabled(),
+                        text=name,
+                        target={
+                            "strategy": "role",
+                            "role": role,
+                            "name": {"source": "literal", "value": name},
+                            "rationale": "Unique visible role and exact accessible name at observation time",
+                        },
+                    )
+                )
                 if len(controls) == 100:
                     break
             self._check_boundary()
             self._sequence += 1
             return Observation(
-                schema_version="1.0", run_id=self._run_id,
-                session_id=self._control.snapshot.session_id, sequence=self._sequence,
-                target=self._identity.model_copy(update={"version": metadata["version"]}), location=urlsplit(self._page.url).path[:4096] or "/",
+                schema_version="1.0",
+                run_id=self._run_id,
+                session_id=self._control.snapshot.session_id,
+                sequence=self._sequence,
+                target=self._identity.model_copy(update={"version": metadata["version"]}),
+                location=urlsplit(self._page.url).path[:4096] or "/",
                 summary=snapshot[:4096] if snapshot.strip() else "No accessible content",
-                controls=controls, state=metadata.get("state") if metadata.get("state") in _STATES else "unknown",
+                controls=controls,
+                state=metadata.get("state") if metadata.get("state") in _STATES else "unknown",
             )
 
     async def preview(self, action, inputs, *, operation, timeout_ms=None):
@@ -299,7 +379,9 @@ class BrowserSurface:
                 # Only compare the approved text field with its already-known input.
                 result["filled"] = await locator.evaluate(
                     "(el, value) => el.tagName === 'INPUT' && ['text','search'].includes(el.type) && el.value === value",
-                    bound.value.value, timeout=self._remaining(deadline))
+                    bound.value.value,
+                    timeout=self._remaining(deadline),
+                )
             self._check_boundary()
             return result
 

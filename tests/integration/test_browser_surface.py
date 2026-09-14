@@ -22,12 +22,15 @@ def async_test(function):
     @wraps(function)
     def run(*args, **kwargs):
         return asyncio.run(function(*args, **kwargs))
+
     return run
 
 
 @pytest.fixture(scope="module")
 def bank_url():
-    server = make_server("127.0.0.1", 0, create_app({"TESTING": True, "SLOW_LOAD_MS": 400}), threaded=True)
+    server = make_server(
+        "127.0.0.1", 0, create_app({"TESTING": True, "SLOW_LOAD_MS": 400}), threaded=True
+    )
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     yield f"http://127.0.0.1:{server.server_port}"
@@ -37,7 +40,9 @@ def bank_url():
 
 
 def session(bank_url, **kwargs):
-    return BrowserSession(base_url=bank_url, target=IDENTITY, run_id="adapter_test", headless=True, **kwargs)
+    return BrowserSession(
+        base_url=bank_url, target=IDENTITY, run_id="adapter_test", headless=True, **kwargs
+    )
 
 
 def literal(value):
@@ -45,7 +50,13 @@ def literal(value):
 
 
 def role(name, kind="button", **kwargs):
-    return {"strategy": "role", "role": kind, "name": literal(name), "rationale": "Test exact role", **kwargs}
+    return {
+        "strategy": "role",
+        "role": kind,
+        "name": literal(name),
+        "rationale": "Test exact role",
+        **kwargs,
+    }
 
 
 def css(selector, **kwargs):
@@ -78,7 +89,9 @@ async def test_fixture_operations_read_current_ui(bank_url, member, balance):
                 outputs[step.action.output] = result
             if step.postcondition:
                 assert await live.surface.evaluate(step.postcondition, inputs)
-        await live.surface.execute({"action": "verify", "condition": capability.success_checkpoint.model_dump()}, inputs)
+        await live.surface.execute(
+            {"action": "verify", "condition": capability.success_checkpoint.model_dump()}, inputs
+        )
         assert outputs == {"balance": balance, "currency": "USD"}
         capability.validate_outputs(outputs)
         observation = await live.surface.observe()
@@ -107,20 +120,27 @@ async def test_observation_reports_real_accessible_controls(bank_url):
         assert (await live.surface.observe()).location == "/"
 
 
-@pytest.mark.parametrize(("target", "code"), [
-    (role("Missing"), "target_not_found"),
-    (role("Same"), "ambiguous_target"),
-    (css("button", scope=".group"), "ambiguous_target"),
-    (css("button", scope="#absent"), "target_not_found"),
-    (css("button >> nth=0"), "unsupported_target"),
-    (css("xpath=//button"), "unsupported_target"),
-    (css("[invalid"), "browser_error"),
-])
+@pytest.mark.parametrize(
+    ("target", "code"),
+    [
+        (role("Missing"), "target_not_found"),
+        (role("Same"), "ambiguous_target"),
+        (css("button", scope=".group"), "ambiguous_target"),
+        (css("button", scope="#absent"), "target_not_found"),
+        (css("button >> nth=0"), "unsupported_target"),
+        (css("xpath=//button"), "unsupported_target"),
+        (css("[invalid"), "browser_error"),
+    ],
+)
 @async_test
 async def test_unsafe_targeting_never_clicks(bank_url, target, code):
     async with session(bank_url) as live:
-        await live._page.set_content('<div class="group"><button>Same</button></div><div class="group"><button>Same</button></div>')
-        await live._page.evaluate("window.clicks = 0; document.addEventListener('click', () => window.clicks++)")
+        await live._page.set_content(
+            '<div class="group"><button>Same</button></div><div class="group"><button>Same</button></div>'
+        )
+        await live._page.evaluate(
+            "window.clicks = 0; document.addEventListener('click', () => window.clicks++)"
+        )
         with pytest.raises(SurfaceError) as caught:
             await live.surface.execute({"action": "click", "target": target})
         assert caught.value.code == code
@@ -130,36 +150,70 @@ async def test_unsafe_targeting_never_clicks(bank_url, target, code):
 @async_test
 async def test_scoped_roles_labels_text_and_css_are_exact(bank_url):
     async with session(bank_url) as live:
-        await live._page.set_content('''
+        await live._page.set_content("""
             <section id="first"><label>Code<input></label><button>Save</button></section>
             <section id="second"><label>Code<input></label><button>Save</button><p>Answer</p></section>
-            <button>Save changes</button>''')
-        await live.surface.execute({"action": "fill", "target": {
-            "strategy": "label", "label": literal("Code"), "scope": "#second", "rationale": "Scoped label",
-        }, "value": literal("new value")})
+            <button>Save changes</button>""")
+        await live.surface.execute(
+            {
+                "action": "fill",
+                "target": {
+                    "strategy": "label",
+                    "label": literal("Code"),
+                    "scope": "#second",
+                    "rationale": "Scoped label",
+                },
+                "value": literal("new value"),
+            }
+        )
         assert await live._page.locator("#first input").input_value() == ""
         assert await live._page.locator("#second input").input_value() == "new value"
-        await live._page.evaluate("document.querySelector('#second button').onclick = () => document.querySelector('p').textContent = 'Saved'")
+        await live._page.evaluate(
+            "document.querySelector('#second button').onclick = () => document.querySelector('p').textContent = 'Saved'"
+        )
         await live.surface.execute({"action": "click", "target": role("Save", scope="#second")})
-        assert await live.surface.execute({"action": "read", "output": "answer", "target": {
-            "strategy": "text", "text": literal("Saved"), "scope": "#second", "rationale": "Exact text",
-        }}) == "Saved"
-        assert await live.surface.execute({"action": "read", "output": "answer", "target": css("#second p")}) == "Saved"
+        assert (
+            await live.surface.execute(
+                {
+                    "action": "read",
+                    "output": "answer",
+                    "target": {
+                        "strategy": "text",
+                        "text": literal("Saved"),
+                        "scope": "#second",
+                        "rationale": "Exact text",
+                    },
+                }
+            )
+            == "Saved"
+        )
+        assert (
+            await live.surface.execute(
+                {"action": "read", "output": "answer", "target": css("#second p")}
+            )
+            == "Saved"
+        )
         assert not await live.surface.evaluate(visible(role("Save change")))
 
 
 @async_test
 async def test_conditions_have_explicit_missing_hidden_and_ambiguous_semantics(bank_url):
     async with session(bank_url) as live:
-        await live._page.set_content('<p id="hidden" hidden>Secret</p><p class="duplicate">A</p><p class="duplicate">B</p><p id="answer">  Yes  </p>')
+        await live._page.set_content(
+            '<p id="hidden" hidden>Secret</p><p class="duplicate">A</p><p class="duplicate">B</p><p id="answer">  Yes  </p>'
+        )
         assert not await live.surface.evaluate(visible(css("#missing")))
         assert await live.surface.evaluate({"kind": "hidden", "target": css("#missing")})
         assert await live.surface.evaluate({"kind": "hidden", "target": css("#hidden")})
-        assert await live.surface.evaluate({"kind": "text_equals", "target": css("#answer"), "expected": literal("Yes")})
+        assert await live.surface.evaluate(
+            {"kind": "text_equals", "target": css("#answer"), "expected": literal("Yes")}
+        )
         with pytest.raises(SurfaceError, match="ambiguous_target"):
             await live.surface.evaluate({"kind": "hidden", "target": css(".duplicate")})
         with pytest.raises(SurfaceError, match="target_not_visible"):
-            await live.surface.execute({"action": "read", "output": "secret", "target": css("#hidden")})
+            await live.surface.execute(
+                {"action": "read", "output": "secret", "target": css("#hidden")}
+            )
         with pytest.raises(SurfaceError, match="checkpoint_failed"):
             await live.surface.execute({"action": "verify", "condition": visible(css("#missing"))})
 
@@ -168,10 +222,14 @@ async def test_conditions_have_explicit_missing_hidden_and_ambiguous_semantics(b
 async def test_real_slow_loading_waits_for_results(bank_url):
     async with session(bank_url) as live:
         await scenario(live, "slow_loading")
-        await live.surface.execute({"action": "fill", "target": css("#member-id"), "value": literal("1001")})
+        await live.surface.execute(
+            {"action": "fill", "target": css("#member-id"), "value": literal("1001")}
+        )
         await live.surface.execute({"action": "click", "target": role("Search")})
         assert (await live.surface.observe()).state == "loading"
-        await live.surface.execute({"action": "wait", "condition": visible(role("1001", "link")), "timeout_ms": 2000})
+        await live.surface.execute(
+            {"action": "wait", "condition": visible(role("1001", "link")), "timeout_ms": 2000}
+        )
         assert await live.surface.evaluate({"kind": "hidden", "target": css("[role=status]")})
         await live.surface.execute({"action": "click", "target": role("1001", "link")})
         assert (await live.surface.observe()).location == "/members/1001"
@@ -183,21 +241,39 @@ async def test_wait_deadline_is_bounded_and_session_remains_usable(bank_url):
         await live.surface.execute({"action": "navigate", "path": "/"})
         started = monotonic()
         with pytest.raises(SurfaceError, match="timeout"):
-            await live.surface.execute({"action": "wait", "condition": visible(css("#absent")), "timeout_ms": 1000}, timeout_ms=120)
+            await live.surface.execute(
+                {"action": "wait", "condition": visible(css("#absent")), "timeout_ms": 1000},
+                timeout_ms=120,
+            )
         assert monotonic() - started < 0.8
         assert await live.surface.evaluate(visible(role("Search")))
-        await live._page.evaluate("setTimeout(() => document.querySelector('h1').textContent = 'Changed', 80)")
-        await live.surface.execute({"action": "wait", "condition": {"kind": "text_equals", "target": css("h1"), "expected": literal("Changed")}, "timeout_ms": 1000})
+        await live._page.evaluate(
+            "setTimeout(() => document.querySelector('h1').textContent = 'Changed', 80)"
+        )
+        await live.surface.execute(
+            {
+                "action": "wait",
+                "condition": {
+                    "kind": "text_equals",
+                    "target": css("h1"),
+                    "expected": literal("Changed"),
+                },
+                "timeout_ms": 1000,
+            }
+        )
 
 
-@pytest.mark.parametrize("action", [
-    {"action": "navigate", "path": "/"},
-    {"action": "fill", "target": css("#member-id"), "value": literal("2002")},
-    {"action": "click", "target": role("Search")},
-    {"action": "read", "target": css("h1"), "output": "heading"},
-    {"action": "wait", "condition": visible(css("h1")), "timeout_ms": 100},
-    {"action": "verify", "condition": visible(css("h1"))},
-])
+@pytest.mark.parametrize(
+    "action",
+    [
+        {"action": "navigate", "path": "/"},
+        {"action": "fill", "target": css("#member-id"), "value": literal("2002")},
+        {"action": "click", "target": role("Search")},
+        {"action": "read", "target": css("h1"), "output": "heading"},
+        {"action": "wait", "condition": visible(css("h1")), "timeout_ms": 100},
+        {"action": "verify", "condition": visible(css("h1"))},
+    ],
+)
 @async_test
 async def test_human_ownership_blocks_every_dispatch(bank_url, action):
     async with session(bank_url) as live:
@@ -232,7 +308,10 @@ async def test_takeover_preserves_page_cookies_and_requires_resume_state(bank_ur
         assert (await live.surface.observe()).state == "ready"
         with pytest.raises(SurfaceError, match="ownership_denied"):
             await live.surface.execute({"action": "click", "target": role("Members", "link")})
-        await live.surface.execute({"action": "verify", "condition": capability.success_checkpoint.model_dump()}, {"member_id": "1001"})
+        await live.surface.execute(
+            {"action": "verify", "condition": capability.success_checkpoint.model_dump()},
+            {"member_id": "1001"},
+        )
         await live.control.transition("AUTOMATION_RUNNING", "Checkpoint passed")
         assert await live.surface.execute(capability.steps[5].action) == "1250.75"
         await live.surface.execute({"action": "navigate", "path": "/members/1001/accounts"})
@@ -251,9 +330,13 @@ async def test_transfer_serializes_with_active_operation_and_blocks_queued_actio
             await route.continue_()
 
         await live._page.route("**/members/1001", delayed)
-        operation = asyncio.create_task(live.surface.execute({"action": "navigate", "path": "/members/1001"}))
+        operation = asyncio.create_task(
+            live.surface.execute({"action": "navigate", "path": "/members/1001"})
+        )
         await asyncio.wait_for(entered.wait(), 2)
-        transfer = asyncio.create_task(live.control.transition("AWAITING_HUMAN", "Concurrent pause"))
+        transfer = asyncio.create_task(
+            live.control.transition("AWAITING_HUMAN", "Concurrent pause")
+        )
         queued = asyncio.create_task(live.surface.execute({"action": "navigate", "path": "/"}))
         await asyncio.sleep(0)  # Schedule contenders; not a UI readiness wait.
         assert not transfer.done()
@@ -275,7 +358,9 @@ async def test_cancelled_mutation_closes_context_before_ownership_can_transfer(b
             # Leave request pending; closing the context must cancel it.
 
         await live._page.route("**/members/1001", stalled)
-        operation = asyncio.create_task(live.surface.execute({"action": "navigate", "path": "/members/1001"}))
+        operation = asyncio.create_task(
+            live.surface.execute({"action": "navigate", "path": "/members/1001"})
+        )
         await asyncio.wait_for(entered.wait(), 2)
         operation.cancel()
         with pytest.raises(asyncio.CancelledError):
@@ -323,11 +408,18 @@ async def test_contexts_are_isolated_and_exceptions_close_browser(bank_url):
     assert all(not browser.is_connected() for browser in browsers)
 
 
-@pytest.mark.parametrize("operation", [
-    {"action": "delete"},
-    {"action": "navigate", "path": "https://example.com"},
-    {"action": "fill", "target": css("input"), "value": {"source": "input", "ref": "inputs.secret"}},
-])
+@pytest.mark.parametrize(
+    "operation",
+    [
+        {"action": "delete"},
+        {"action": "navigate", "path": "https://example.com"},
+        {
+            "action": "fill",
+            "target": css("input"),
+            "value": {"source": "input", "ref": "inputs.secret"},
+        },
+    ],
+)
 @async_test
 async def test_invalid_contracts_fail_before_browser_dispatch(bank_url, operation):
     async with session(bank_url) as live:
@@ -343,7 +435,14 @@ async def test_observation_rejects_incompatible_ui_and_driver_errors_do_not_echo
             await live.surface.observe()
         await live._page.set_content('<input disabled aria-label="Secret">')
         with pytest.raises(SurfaceError) as caught:
-            await live.surface.execute({"action": "fill", "target": role("Secret", "textbox"), "value": literal("do-not-expose")}, timeout_ms=80)
+            await live.surface.execute(
+                {
+                    "action": "fill",
+                    "target": role("Secret", "textbox"),
+                    "value": literal("do-not-expose"),
+                },
+                timeout_ms=80,
+            )
         assert caught.value.code == "timeout"
         assert "do-not-expose" not in str(caught.value)
 

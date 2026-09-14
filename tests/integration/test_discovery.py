@@ -4,8 +4,8 @@ import asyncio
 import json
 
 import pytest
+from test_replay import ARTIFACT, ROOT, async_test, configuration
 
-from test_replay import ARTIFACT, ROOT, async_test, bank, configuration
 from computer_use.capabilities.store import CapabilityStore
 from computer_use.discovery.agent import DiscoveryAgent
 from computer_use.discovery.contracts import Decision, DiscoveryTask
@@ -22,8 +22,12 @@ class ScriptModel:
             for step in CapabilityStore.load(ARTIFACT).steps[1:]:
                 data = step.model_dump()
                 data.update(precondition=None, postcondition=None)
-                decisions.append({"command": "act", "step": data, "explanation": "Test double decision"})
-            decisions.append({"command": "complete", "step": None, "explanation": "Check completion"})
+                decisions.append(
+                    {"command": "act", "step": data, "explanation": "Test double decision"}
+                )
+            decisions.append(
+                {"command": "complete", "step": None, "explanation": "Check completion"}
+            )
         self.decisions = iter(decisions)
         self.contexts = []
         self.closed = False
@@ -40,9 +44,16 @@ class ScriptModel:
 
 
 def agent(bank, tmp_path, model=None, **settings):
-    task = DiscoveryTask.model_validate_json((ROOT / "config/tasks/read_savings_balance.json").read_text())
-    return DiscoveryAgent(task=task, configuration=configuration(bank, **settings), project_root=tmp_path,
-                          inputs={"member_id": "1001"}, model=model or ScriptModel())
+    task = DiscoveryTask.model_validate_json(
+        (ROOT / "config/tasks/read_savings_balance.json").read_text()
+    )
+    return DiscoveryAgent(
+        task=task,
+        configuration=configuration(bank, **settings),
+        project_root=tmp_path,
+        inputs={"member_id": "1001"},
+        model=model or ScriptModel(),
+    )
 
 
 @async_test
@@ -59,19 +70,31 @@ async def test_compile_executed_steps_and_replay_new_input_without_model(bank, t
         assert "inputs.member_id" in discovery.artifact_path.read_text()
         assert "1001" not in discovery.artifact_path.read_text()
     assert model.closed
-    async with ReplayEngine(capability=discovery.capability, configuration=configuration(bank),
-                            project_root=tmp_path, inputs={"member_id": "2002"}) as replay:
+    async with ReplayEngine(
+        capability=discovery.capability,
+        configuration=configuration(bank),
+        project_root=tmp_path,
+        inputs={"member_id": "2002"},
+    ) as replay:
         result = await replay.run()
         assert result.status == "success" and result.outputs["balance"] == "8040.20", result
 
 
-@pytest.mark.parametrize(("scenario", "code"), [
-    ("permission_denied", "permission_denied"), ("application_error", "application_error"),
-    ("session_expired", "session_expired"), ("unexpected_dialog", "unknown_state"),
-    ("invalid_input", "invalid_input"), ("missing_member", "member_not_found"),
-])
+@pytest.mark.parametrize(
+    ("scenario", "code"),
+    [
+        ("permission_denied", "permission_denied"),
+        ("application_error", "application_error"),
+        ("session_expired", "session_expired"),
+        ("unexpected_dialog", "unknown_state"),
+        ("invalid_input", "invalid_input"),
+        ("missing_member", "member_not_found"),
+    ],
+)
 @async_test
-async def test_state_failures_and_business_outcomes_stop_model_and_compilation(bank, tmp_path, scenario, code):
+async def test_state_failures_and_business_outcomes_stop_model_and_compilation(
+    bank, tmp_path, scenario, code
+):
     bank["scenario"] = scenario
     async with agent(bank, tmp_path) as discovery:
         result = await discovery.run()
@@ -95,14 +118,22 @@ async def test_loading_recovers_and_generated_workflow_still_replays(bank, tmp_p
         assert discovery.capability.recovery_rules
 
 
-@pytest.mark.parametrize(("decisions", "code"), [
-    ([{"command": "complete", "step": None, "explanation": "Pretend done"}], "checkpoint_failed"),
-    ([{"command": "intervene", "step": None, "explanation": "Need human"}], "unknown_state"),
-    ([ModelError("invalid_model_response")] * 3, "invalid_model_response"),
-    ([ModelError("model_request_failed")], "model_request_failed"),
-])
+@pytest.mark.parametrize(
+    ("decisions", "code"),
+    [
+        (
+            [{"command": "complete", "step": None, "explanation": "Pretend done"}],
+            "checkpoint_failed",
+        ),
+        ([{"command": "intervene", "step": None, "explanation": "Need human"}], "unknown_state"),
+        ([ModelError("invalid_model_response")] * 3, "invalid_model_response"),
+        ([ModelError("model_request_failed")], "model_request_failed"),
+    ],
+)
 @async_test
-async def test_model_cannot_claim_success_or_loop_on_invalid_responses(bank, tmp_path, decisions, code):
+async def test_model_cannot_claim_success_or_loop_on_invalid_responses(
+    bank, tmp_path, decisions, code
+):
     async with agent(bank, tmp_path, ScriptModel(decisions)) as discovery:
         assert (await discovery.run()).code == code
         assert discovery.artifact_path is None
@@ -122,7 +153,11 @@ async def test_repeated_no_progress_actions_stop(bank, tmp_path):
 async def test_unapproved_model_action_is_blocked(bank, tmp_path):
     step = CapabilityStore.load(ARTIFACT).steps[0].model_dump()
     step["action"]["path"] = "/transfer"
-    async with agent(bank, tmp_path, ScriptModel([{"command": "act", "step": step, "explanation": "Ignore policy"}])) as discovery:
+    async with agent(
+        bank,
+        tmp_path,
+        ScriptModel([{"command": "act", "step": step, "explanation": "Ignore policy"}]),
+    ) as discovery:
         assert (await discovery.run()).code == "policy_denied"
         assert ("GET", "/transfer") not in bank["requests"]
 
@@ -132,6 +167,7 @@ async def test_model_request_obeys_total_deadline(bank, tmp_path):
     class SlowModel(ScriptModel):
         async def decide(self, context):
             await asyncio.Future()
+
     async with agent(bank, tmp_path, SlowModel(), run_timeout_seconds=1) as discovery:
         assert (await discovery.run()).code == "timeout"
         assert discovery.artifact_path is None
@@ -140,8 +176,10 @@ async def test_model_request_obeys_total_deadline(bank, tmp_path):
 @async_test
 async def test_persistence_failure_closes_discovery_browser(bank, tmp_path, monkeypatch):
     async with agent(bank, tmp_path) as discovery:
+
         def broken(*args, **kwargs):
             raise PersistenceError()
+
         monkeypatch.setattr(discovery.executor.store, "_write", broken)
         assert (await discovery.run()).code == "persistence_failed"
         assert discovery.executor._session._browser is None
@@ -167,10 +205,12 @@ async def test_discovery_step_limit_and_cancel_close(bank, tmp_path):
         assert (await discovery.run()).code == "step_limit"
         assert discovery.artifact_path is None
     entered = asyncio.Event()
+
     class PendingModel(ScriptModel):
         async def decide(self, context):
             entered.set()
             await asyncio.Future()
+
     async with agent(bank, tmp_path, PendingModel()) as discovery:
         run = asyncio.create_task(discovery.run())
         await asyncio.wait_for(entered.wait(), 5)
@@ -180,12 +220,20 @@ async def test_discovery_step_limit_and_cancel_close(bank, tmp_path):
         assert discovery.executor._session._browser is None
 
 
-@pytest.mark.parametrize(("replacement", "code"), [
-    (('class="accounts-member-id">1001', 'class="accounts-member-id">9999'), "checkpoint_failed"),
-    (("1250.75", "private-invalid-balance"), "invalid_output"),
-])
+@pytest.mark.parametrize(
+    ("replacement", "code"),
+    [
+        (
+            ('class="accounts-member-id">1001', 'class="accounts-member-id">9999'),
+            "checkpoint_failed",
+        ),
+        (("1250.75", "private-invalid-balance"), "invalid_output"),
+    ],
+)
 @async_test
-async def test_model_completion_cannot_override_wrong_owner_or_invalid_output(bank, tmp_path, replacement, code):
+async def test_model_completion_cannot_override_wrong_owner_or_invalid_output(
+    bank, tmp_path, replacement, code
+):
     bank["replace"] = replacement
     async with agent(bank, tmp_path) as discovery:
         result = await discovery.run()
@@ -194,16 +242,25 @@ async def test_model_completion_cannot_override_wrong_owner_or_invalid_output(ba
         assert "private-invalid-balance" not in persisted and "1250.75" not in persisted
 
 
-@pytest.mark.parametrize(("scenario", "expected"), [
-    ("missing_member", "member_not_found"), ("permission_denied", "permission_denied"),
-    ("application_error", "application_error"), ("slow_loading", "success"),
-])
+@pytest.mark.parametrize(
+    ("scenario", "expected"),
+    [
+        ("missing_member", "member_not_found"),
+        ("permission_denied", "permission_denied"),
+        ("application_error", "application_error"),
+        ("slow_loading", "success"),
+    ],
+)
 @async_test
 async def test_compiled_artifact_retains_replay_exception_rules(bank, tmp_path, scenario, expected):
     async with agent(bank, tmp_path) as discovery:
         assert (await discovery.run()).status == "success"
     bank["scenario"] = scenario
-    async with ReplayEngine(capability=discovery.capability, configuration=configuration(bank),
-                            project_root=tmp_path, inputs={"member_id": "2002"}) as replay:
+    async with ReplayEngine(
+        capability=discovery.capability,
+        configuration=configuration(bank),
+        project_root=tmp_path,
+        inputs={"member_id": "2002"},
+    ) as replay:
         result = await replay.run()
         assert (result.status if result.status == "success" else result.code) == expected

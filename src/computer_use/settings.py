@@ -1,15 +1,15 @@
 """Strict, explicit loading of operator-owned YAML; no model-supplied policies."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, field_validator, model_validator
 import yaml
+from pydantic import Field, field_validator, model_validator
 
+from computer_use.safety.urls import split_url
 from computer_use.schemas.action import Condition, Target, TextValue
 from computer_use.schemas.common import Contract, Identifier, Text
-from computer_use.safety.urls import split_url
 
 
 class ConfigurationError(ValueError):
@@ -86,14 +86,22 @@ class ActionRule(Contract):
     @model_validator(mode="after")
     def complete_rule(self) -> Self:
         if self.action == "navigate":
-            if self.path is None or any(x is not None for x in (self.target, self.condition, self.value)):
+            if self.path is None or any(
+                x is not None for x in (self.target, self.condition, self.value)
+            ):
                 raise ValueError("Navigation rule requires only a path pattern")
             validate_pattern(self.path)
         elif self.action in {"wait", "verify"}:
-            if self.condition is None or any(x is not None for x in (self.target, self.path, self.value)):
+            if self.condition is None or any(
+                x is not None for x in (self.target, self.path, self.value)
+            ):
                 raise ValueError("Condition rule requires only a condition")
-        elif (self.target is None or self.condition is not None or self.path is not None
-                or (self.action == "fill") != (self.value is not None)):
+        elif (
+            self.target is None
+            or self.condition is not None
+            or self.path is not None
+            or (self.action == "fill") != (self.value is not None)
+        ):
             raise ValueError("Target/value fields do not match the action")
         return self
 
@@ -144,7 +152,9 @@ class Configuration(Contract):
         origin, path = split_url(self.target.entry_url)
         if origin not in {split_url(value)[0] for value in self.policy.allowed_origins}:
             raise ValueError("Entry origin is not approved")
-        if not any("GET" in r.methods and re.fullmatch(r.path, path) for r in self.policy.navigation):
+        if not any(
+            "GET" in r.methods and re.fullmatch(r.path, path) for r in self.policy.navigation
+        ):
             raise ValueError("Entry route is not approved")
         return self
 
@@ -168,13 +178,18 @@ _UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _u
 
 def load_configuration(project_root: Path) -> Configuration:
     try:
+
         def read(name):
             path = project_root / "config" / name
             if path.stat().st_size > 131072:
                 raise ValueError("Configuration too large")
             return yaml.load(path.read_text(), Loader=_UniqueLoader)
 
-        return Configuration(runtime=read("settings.yaml"), target=read("targets/mock_bank.yaml"), policy=read("policy.yaml"))
+        return Configuration(
+            runtime=read("settings.yaml"),
+            target=read("targets/mock_bank.yaml"),
+            policy=read("policy.yaml"),
+        )
     except (OSError, ValueError, TypeError, yaml.YAMLError, re.error):
         # Never echo YAML content or file paths that might include secrets.
         raise ConfigurationError("Configuration is missing, invalid, or incompatible") from None

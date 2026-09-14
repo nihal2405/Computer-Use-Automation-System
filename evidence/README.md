@@ -5,7 +5,7 @@ operator run from automated tests. Runtime inputs, balances and unreviewed text
 are redacted in JSON/JSONL diagnostics; synthetic examples in documentation and
 application source are labelled as synthetic.
 
-- [Latest user-run demonstration](latest-demo/README.md). Six discovery responses,
+- [Latest demonstration](latest-demo/README.md). Six discovery responses,
   reuse of the newly generated artifact without model calls, and a separate manual
   handoff. Includes original UI screenshots containing explicitly synthetic data,
   inspected sanitized logs, provenance limitations and a file-hash manifest.

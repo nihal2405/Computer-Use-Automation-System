@@ -9,21 +9,29 @@ from computer_use.schemas.observation import Observation
 from computer_use.schemas.result import Diagnostic
 
 ControlState = Literal[
-    "AUTOMATION_RUNNING", "AWAITING_HUMAN", "HUMAN_CONTROL", "RESUME_CHECK",
-    "COMPLETED", "FAILED",
+    "AUTOMATION_RUNNING",
+    "AWAITING_HUMAN",
+    "HUMAN_CONTROL",
+    "RESUME_CHECK",
+    "COMPLETED",
+    "FAILED",
 ]
 Owner = Literal["automation", "human", "none"]
 OWNERS: dict[str, str] = {
-    "AUTOMATION_RUNNING": "automation", "AWAITING_HUMAN": "none",
-    "HUMAN_CONTROL": "human", "RESUME_CHECK": "automation",
-    "COMPLETED": "none", "FAILED": "none",
+    "AUTOMATION_RUNNING": "automation",
+    "AWAITING_HUMAN": "none",
+    "HUMAN_CONTROL": "human",
+    "RESUME_CHECK": "automation",
+    "COMPLETED": "none",
+    "FAILED": "none",
 }
 TRANSITIONS: dict[str, set[str]] = {
     "AUTOMATION_RUNNING": {"AWAITING_HUMAN", "COMPLETED", "FAILED"},
     "AWAITING_HUMAN": {"HUMAN_CONTROL", "FAILED"},
     "HUMAN_CONTROL": {"RESUME_CHECK", "FAILED"},
     "RESUME_CHECK": {"AUTOMATION_RUNNING", "AWAITING_HUMAN", "COMPLETED", "FAILED"},
-    "COMPLETED": set(), "FAILED": set(),
+    "COMPLETED": set(),
+    "FAILED": set(),
 }
 
 
@@ -68,7 +76,9 @@ class Resolution(Contract):
 
     @model_validator(mode="after")
     def verified_return(self) -> Self:
-        if self.action in ("resume", "complete") and (self.verification is None or not self.state_verified):
+        if self.action in ("resume", "complete") and (
+            self.verification is None or not self.state_verified
+        ):
             raise ValueError("Resume or completion requires recorded state verification")
         if (self.action == "resume") != (self.resume_step_id is not None):
             raise ValueError("Only resume requires a resume step ID")
@@ -85,8 +95,14 @@ class Intervention(Contract):
     capability_version: Version | None = None
     step_id: Identifier | None
     reason: Literal[
-        "unknown_state", "recovery_exhausted", "policy_blocked", "no_progress",
-        "step_limit", "timeout", "session_expired", "permission_denied",
+        "unknown_state",
+        "recovery_exhausted",
+        "policy_blocked",
+        "no_progress",
+        "step_limit",
+        "timeout",
+        "session_expired",
+        "permission_denied",
     ]
     diagnostic: Diagnostic
     context: Observation
@@ -104,7 +120,9 @@ class Intervention(Contract):
         expected = {"resume": "AUTOMATION_RUNNING", "complete": "COMPLETED", "abort": "FAILED"}
         if self.resolution is None:
             if self.control.state not in ("AWAITING_HUMAN", "HUMAN_CONTROL", "RESUME_CHECK"):
-                raise ValueError("Open intervention must be paused, human-controlled, or checking resume")
+                raise ValueError(
+                    "Open intervention must be paused, human-controlled, or checking resume"
+                )
         elif self.control.state != expected[self.resolution.action]:
             raise ValueError("Resolution and final control state disagree")
         return self

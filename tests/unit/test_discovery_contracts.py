@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 
 import httpx
-from openai import AsyncOpenAI
 import pytest
+from openai import AsyncOpenAI
 
 from computer_use.capabilities.compiler import compile_capability
 from computer_use.capabilities.store import CapabilityStore
@@ -17,18 +17,72 @@ from computer_use.schemas.capability import Step, TargetIdentity
 ROOT = Path(__file__).parents[2]
 
 
+def test_provider_accepts_dictionary_settings():
+    async def run():
+        model = OpenAIModel(
+            {"provider": "gemini", "model": "test-model", "request_timeout_seconds": 17},
+            "fake-test-key",
+        )
+        try:
+            assert model._client.timeout == 17
+        finally:
+            await model.close()
+
+    asyncio.run(run())
+
+
+def test_provider_404_has_a_useful_code_without_exposing_the_response():
+    async def run():
+        def handler(request):
+            return httpx.Response(
+                404,
+                json=[
+                    {
+                        "error": {
+                            "code": 404,
+                            "message": "Model unavailable for private-project; private-provider-details",
+                            "status": "NOT_FOUND",
+                        }
+                    }
+                ],
+            )
+
+        model = OpenAIModel(ModelSettings(provider="gemini", model="test-model"), "fake-key")
+        await model.close()
+        model._client = AsyncOpenAI(
+            api_key="fake-key",
+            max_retries=0,
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+        )
+        try:
+            with pytest.raises(ModelError) as error:
+                await model.decide({"state": "ready"})
+            assert error.value.provider_status == 404
+            assert error.value.provider_reason == "model_not_found"
+            assert "private" not in str(error.value)
+        finally:
+            await model.close()
+
+    asyncio.run(run())
+
+
 def test_discovery_task_contains_no_sequence_or_fixture_provenance():
-    task = DiscoveryTask.model_validate_json((ROOT / "config/tasks/read_savings_balance.json").read_text())
+    task = DiscoveryTask.model_validate_json(
+        (ROOT / "config/tasks/read_savings_balance.json").read_text()
+    )
     assert not hasattr(task, "steps") and not hasattr(task, "provenance")
     with pytest.raises(ValueError):
         DiscoveryTask.model_validate({**task.model_dump(), "steps": []})
 
 
-@pytest.mark.parametrize("decision", [
-    {"command": "shell", "step": None, "explanation": "Bad command"},
-    {"command": "act", "step": None, "explanation": "Missing step"},
-    {"command": "complete", "step": None, "explanation": "Done", "outputs": {"balance": "100"}},
-])
+@pytest.mark.parametrize(
+    "decision",
+    [
+        {"command": "shell", "step": None, "explanation": "Bad command"},
+        {"command": "act", "step": None, "explanation": "Missing step"},
+        {"command": "complete", "step": None, "explanation": "Done", "outputs": {"balance": "100"}},
+    ],
+)
 def test_model_decisions_are_strict(decision):
     with pytest.raises(ValueError):
         Decision.model_validate(decision)
@@ -46,6 +100,7 @@ def test_provider_schema_uses_required_fields_and_supported_unions():
         if isinstance(value, list):
             for item in value:
                 inspect(item)
+
     inspect(response_schema())
 
 
@@ -65,37 +120,86 @@ def test_bindings_come_from_templates_not_global_string_replacement():
 
 @pytest.mark.parametrize("failure", ["unverified", "no_model"])
 def test_compiler_rejects_unverified_or_non_model_execution(failure):
-    task = DiscoveryTask.model_validate_json((ROOT / "config/tasks/read_savings_balance.json").read_text())
+    task = DiscoveryTask.model_validate_json(
+        (ROOT / "config/tasks/read_savings_balance.json").read_text()
+    )
     cap = CapabilityStore.load(ROOT / "tests/fixtures/read_savings_balance.json")
     recorder = Recorder(cap.steps, {"member_id": "1001"})
     recorder.steps = cap.steps
     recorder.model_responses = ["response"] if failure != "no_model" else []
     with pytest.raises(ValueError):
-        compile_capability(task, recorder, run_id="untrusted", identity=TargetIdentity(product="synthetic_bank", version="1.0", surface="browser"),
-            outputs={"balance": "1250.75", "currency": "USD"}, checkpoint_verified=failure != "unverified", live_provider=False)
+        compile_capability(
+            task,
+            recorder,
+            run_id="untrusted",
+            identity=TargetIdentity(product="synthetic_bank", version="1.0", surface="browser"),
+            outputs={"balance": "1250.75", "currency": "USD"},
+            checkpoint_verified=failure != "unverified",
+            live_provider=False,
+        )
 
 
-@pytest.mark.parametrize(("mode", "code"), [("ok", None), ("refusal", "invalid_model_response"),
-    ("incomplete", "invalid_model_response"), ("malformed", "invalid_model_response"), ("http_error", "model_request_failed")])
+@pytest.mark.parametrize(
+    ("mode", "code"),
+    [
+        ("ok", None),
+        ("refusal", "invalid_model_response"),
+        ("incomplete", "invalid_model_response"),
+        ("malformed", "invalid_model_response"),
+        ("http_error", "model_request_failed"),
+    ],
+)
 def test_openai_transport_structured_output_errors_and_no_hidden_retries(mode, code):
     async def run():
         requests = []
+
         def handler(request):
             requests.append(json.loads(request.content))
             if mode == "http_error":
-                return httpx.Response(429, json={"error": {"message": "private-provider-details", "type": "rate_limit"}})
-            output_text = json.dumps({"command": "complete", "step": None, "explanation": "Verified by controller"})
-            content = [{"type": "output_text", "text": "{" if mode == "malformed" else output_text, "annotations": []}]
+                return httpx.Response(
+                    429,
+                    json={"error": {"message": "private-provider-details", "type": "rate_limit"}},
+                )
+            output_text = json.dumps(
+                {"command": "complete", "step": None, "explanation": "Verified by controller"}
+            )
+            content = [
+                {
+                    "type": "output_text",
+                    "text": "{" if mode == "malformed" else output_text,
+                    "annotations": [],
+                }
+            ]
             if mode == "refusal":
                 content = [{"type": "refusal", "refusal": "private-provider-details"}]
-            return httpx.Response(200, json={"id": "resp_test", "object": "response", "created_at": 1,
-                "model": "gpt-4.1-mini-2025-04-14", "status": "incomplete" if mode == "incomplete" else "completed",
-                "output": [{"id": "msg_test", "type": "message", "role": "assistant", "status": "completed", "content": content}]})
+            return httpx.Response(
+                200,
+                json={
+                    "id": "resp_test",
+                    "object": "response",
+                    "created_at": 1,
+                    "model": "gpt-4.1-mini-2025-04-14",
+                    "status": "incomplete" if mode == "incomplete" else "completed",
+                    "output": [
+                        {
+                            "id": "msg_test",
+                            "type": "message",
+                            "role": "assistant",
+                            "status": "completed",
+                            "content": content,
+                        }
+                    ],
+                },
+            )
+
         settings = ModelSettings(provider="openai", model="gpt-4.1-mini-2025-04-14")
         model = OpenAIModel(settings, "fake-test-key")
         await model.close()
-        model._client = AsyncOpenAI(api_key="fake-test-key", max_retries=0,
-            http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+        model._client = AsyncOpenAI(
+            api_key="fake-test-key",
+            max_retries=0,
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+        )
         try:
             if code:
                 with pytest.raises(ModelError) as error:
@@ -109,6 +213,7 @@ def test_openai_transport_structured_output_errors_and_no_hidden_retries(mode, c
             assert "fake-test-key" not in json.dumps(requests)
         finally:
             await model.close()
+
     asyncio.run(run())
 
 
@@ -123,34 +228,70 @@ def test_missing_credentials_fail_without_network(tmp_path, monkeypatch):
 
 def test_live_provenance_export_preserves_generated_run_correlation(tmp_path):
     from uuid import uuid4
+
     from computer_use.safety.policy import Policy
     from computer_use.safety.redaction import Redactor
     from computer_use.settings import load_configuration
+
     run_id = str(uuid4())
     cap = CapabilityStore.load(ROOT / "tests/fixtures/read_savings_balance.json")
     data = cap.model_dump()
     data.update(provenance="llm_discovery", discovery_run_id=run_id)
     settings = load_configuration(ROOT)
-    store = CapabilityStore(tmp_path, Redactor(Policy(settings.policy).vocabulary() | {settings.target.product, *settings.target.supported_versions}))
+    store = CapabilityStore(
+        tmp_path,
+        Redactor(
+            Policy(settings.policy).vocabulary()
+            | {settings.target.product, *settings.target.supported_versions}
+        ),
+    )
     saved = CapabilityStore.load(store.save(data))
     assert saved.discovery_run_id == run_id
 
 
-@pytest.mark.parametrize(("finish", "text", "accepted"), [("stop", '{"command":"complete","step":null,"explanation":"Check completion"}', True),
-    ("length", "{}", False), ("stop", "{", False), ("content_filter", "", False)])
+@pytest.mark.parametrize(
+    ("finish", "text", "accepted"),
+    [
+        ("stop", '{"command":"complete","step":null,"explanation":"Check completion"}', True),
+        ("length", "{}", False),
+        ("stop", "{", False),
+        ("content_filter", "", False),
+    ],
+)
 def test_gemini_uses_google_endpoint_and_validates_structured_response(finish, text, accepted):
     async def run():
         requests = []
+
         def handler(request):
             requests.append(request)
-            return httpx.Response(200, json={"id": "chatcmpl_test", "object": "chat.completion", "created": 1,
-                "model": "gemini-3.8-flash", "choices": [{"index": 0, "finish_reason": finish,
-                    "message": {"role": "assistant", "content": text}}]})
-        model = OpenAIModel(ModelSettings(provider="gemini", model="gemini-3.8-flash"), "fake-gemini-key")
+            return httpx.Response(
+                200,
+                json={
+                    "id": "chatcmpl_test",
+                    "object": "chat.completion",
+                    "created": 1,
+                    "model": "gemini-3.8-flash",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "finish_reason": finish,
+                            "message": {"role": "assistant", "content": text},
+                        }
+                    ],
+                },
+            )
+
+        model = OpenAIModel(
+            ModelSettings(provider="gemini", model="gemini-3.8-flash"), "fake-gemini-key"
+        )
         endpoint = str(model._client.base_url)
         await model.close()
-        model._client = AsyncOpenAI(api_key="fake-gemini-key", base_url=endpoint, max_retries=0,
-            http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+        model._client = AsyncOpenAI(
+            api_key="fake-gemini-key",
+            base_url=endpoint,
+            max_retries=0,
+            http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+        )
         try:
             if accepted:
                 assert (await model.decide({"state": "ready"})).decision.command == "complete"
@@ -164,6 +305,7 @@ def test_gemini_uses_google_endpoint_and_validates_structured_response(finish, t
             assert "fake-gemini-key" not in requests[0].content.decode()
         finally:
             await model.close()
+
     asyncio.run(run())
 
 

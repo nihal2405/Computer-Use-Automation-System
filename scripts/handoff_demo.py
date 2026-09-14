@@ -9,7 +9,7 @@ from threading import Thread
 # package. Make it importable when this script is launched by its documented path.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from werkzeug.serving import make_server, WSGIRequestHandler
+from werkzeug.serving import WSGIRequestHandler, make_server
 
 from computer_use.capabilities.store import CapabilityStore
 from computer_use.handoff.operator import run_interactive
@@ -26,8 +26,13 @@ class QuietHandler(WSGIRequestHandler):
 async def main():
     root = Path(__file__).resolve().parents[1]
     # Hosting is setup only. Replay obtains all output through Chromium, not app data.
-    server = make_server("127.0.0.1", 0, create_app({"DEFAULT_SCENARIO": "unexpected_dialog"}),
-                         threaded=True, request_handler=QuietHandler)
+    server = make_server(
+        "127.0.0.1",
+        0,
+        create_app({"DEFAULT_SCENARIO": "unexpected_dialog"}),
+        threaded=True,
+        request_handler=QuietHandler,
+    )
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     origin = f"http://127.0.0.1:{server.server_port}"
@@ -35,8 +40,12 @@ async def main():
     config["target"]["entry_url"] = origin + "/"
     config["policy"]["allowed_origins"] = [origin]
     config["runtime"]["browser"]["headless"] = False
-    engine = ReplayEngine(capability=CapabilityStore.load(root / "evidence/phase7/capability.json"),
-        configuration=Configuration.model_validate(config), project_root=root, inputs={"member_id": "2002"})
+    engine = ReplayEngine(
+        capability=CapabilityStore.load(root / "evidence/phase7/capability.json"),
+        configuration=Configuration.model_validate(config),
+        project_root=root,
+        inputs={"member_id": "2002"},
+    )
     try:
         result = await run_interactive(engine)
         print(result.model_dump_json(indent=2), flush=True)

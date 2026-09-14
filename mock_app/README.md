@@ -72,7 +72,6 @@ uv run --locked python -m pytest -q
 
 The app has 31 server checks and 16 Chromium checks covering both members, every
 scenario, session isolation, blocked data, dialog resolution, and a mobile viewport.
-At Phase 3 completion, the project suite passed all 144 tests. The completed
-fresh-environment acceptance suite passes 349 tests, including browser, replay,
-discovery, safety, and handoff coverage. Both normal member workflows were also
-inspected interactively in the browser.
+Both normal workflows were also completed manually. See the
+[evidence index](../evidence/README.md) for recorded acceptance results and
+[latest screenshots](../evidence/latest-demo/README.md).

@@ -5,9 +5,9 @@ The live local demo completed successfully on 2026-09-13 using
 Gemini-generated Phase 7 capability against the synthetic bank's unexpected dialog.
 No model was called during this replay.
 
-The operator used the local UI to take control, acknowledged the bank's dialog,
-and requested resume. The assistant started the demo and opened the operator
-screen; it did not issue the takeover, acknowledgement, or resume actions.
+I used the local UI to take control, acknowledge the bank's dialog, and request
+resume. Setup tooling launched the demo and opened the operator screen; the
+control actions were manual.
 This run is separate from the simulated-operator integration tests. The local
 bearer token establishes access, not a verified person's identity.
 

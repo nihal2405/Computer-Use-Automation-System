@@ -30,7 +30,7 @@ A direct request with the configured key returned HTTP 404 for Gemini 2.5 Flash
 and named Gemini 3.6 Flash as its replacement. The default follows that guidance;
 historical Phase 7 evidence retains the model actually used at the time.
 Gemini 3 requires reasoning enabled, so use `low` rather than `none`.
-The [latest user-run evidence](../evidence/latest-demo/README.md) records successful
+The [latest demo evidence](../evidence/latest-demo/README.md) records successful
 discovery after this configuration update and replay of the new artifact for a
 different member. Its model attribution and historical-source limits are explicit.
 
@@ -151,15 +151,13 @@ false completion, recovery exhaustion, session/app errors, cancellation,
 persistence failure, parameter binding, and replay of compiled test workflows.
 These tests make no billable model calls and do not replace the genuine run.
 
-The completed Gemini run and its model-disabled replay are preserved in
-[evidence/phase7](../evidence/phase7/README.md). Phase 7 passed 326 tests.
-To apply all replay browser checks to that genuine artifact:
+The [latest demo](../evidence/latest-demo/README.md) preserves discovery and replay
+with the current provider configuration. To run replay checks on its artifact:
 
 ```bash
-REPLAY_TEST_ARTIFACT=evidence/phase7/capability.json \
+REPLAY_TEST_ARTIFACT=evidence/latest-demo/capability.json \
   uv run --locked python -m pytest tests/integration/test_replay.py -q
 ```
 
-All 21 checks pass, including both inputs, exceptional outcomes, exhaustion,
-failed checkpoints, typed outputs, ownership, persistence, and the separate
-model-disabled CLI process.
+These checks cover both inputs, exceptional outcomes, exhaustion, failed
+checkpoints, typed outputs, ownership, persistence, and the model-disabled CLI.

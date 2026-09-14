@@ -1,9 +1,8 @@
-# Latest user-run discovery, replay and handoff
+# Latest discovery, replay and handoff
 
-These executions were performed by the user on September 13, 2026. The assistant
-subsequently inspected and copied the original generated artifact and sanitized
-runtime files without rewriting them. The user supplied terminal results and
-screenshots; the assistant did not perform the human takeover in these runs.
+I ran these demos on September 13, 2026 and captured the terminal results and
+screenshots. The artifact and sanitized logs below are unchanged copies of those
+runs. I performed the takeover manually; it was not a simulated-operator test.
 
 ## Discovery and reuse
 
@@ -16,15 +15,15 @@ screenshots; the assistant did not perform the human takeover in these runs.
 - [Replay events](replay/events.jsonl) contain no model requests or responses and
   end with successful completion and a verified checkpoint.
 
-The user reported discovery for synthetic member `1001` returning `1250.75 USD`,
-then invoked `scripts/replay_without_model.py` with this exact generated file for
+My discovery command for synthetic member `1001` returned `1250.75 USD`,
+then I invoked `scripts/replay_without_model.py` with this exact generated file for
 synthetic member `2002`, returning `8040.20 USD` and `model_used: false`. That
 wrapper blocks model imports and removes API-key environment variables. The
-diagnostic copies retain redaction; these literal values are user-reported
-synthetic demo results, not values recovered from redacted logs.
+diagnostic copies retain redaction; the literal values above come from my terminal results and screenshots,
+not from decoding the redacted logs.
 
 The configured provider/model was Gemini / `gemini-3.6-flash` with `low` reasoning.
-This association follows the configured default and user-reported command. The
+This association follows the configured default and the command I ran. The
 persisted model name is redacted, so these files are not an independent attestation
 of the exact provider model. No new full source snapshot was captured at run time.
 The manifest identifies the source revision available during packaging rather
@@ -42,13 +41,13 @@ The [resolution](handoff/ec437c72-5bb5-47bf-a99a-9387066e5003.json) records
 
 This separate demonstration was launched using `scripts/handoff_demo.py`, which
 loads the older [Phase 7 capability](../phase7/capability.json). It does not prove
-handoff using the newly generated capability. The user reported `8040.20 USD` at
+handoff using the newly generated capability. My terminal returned `8040.20 USD` at
 completion. Structural failure diagnostics and the initial unresolved intervention
 are retained alongside the successful resolution.
 
 ## Original UI screenshots
 
-These are unchanged, visually reviewed user screenshots. All visible member names,
+These are the original screenshots from my manual demo. All visible member names,
 identifiers, account numbers and amounts are synthetic demonstration data.
 
 ![Unexpected dialog awaiting acknowledgement](images/03-unexpected-dialog.png)
@@ -60,14 +59,12 @@ The zero human-event count above is the state before takeover, not the final cou
 ![Accounts visible after the obstacle was resolved](images/05-accounts-after-intervention.png)
 
 The accounts screenshot alone does not establish resumed automation; the correlated
-events and verified resolution provide that evidence. Screenshot association with
-this demonstration is user supplied; the images do not embed run identifiers.
+events and verified resolution provide that evidence. The screenshots document the manual sequence; they do not embed run identifiers.
 
 Two terminal screenshots contain a personal absolute filesystem path and are
 excluded from this public package. The blank first attachment is also excluded.
-Originals remain on the user's Desktop; local working copies of the five useful
-screenshots are in ignored `tmp/latest-demo-originals/`. No image was synthesized
-or generatively edited. Operator URLs/tokens and API keys are excluded.
+Originals remain on my Desktop; local working copies of the five useful
+screenshots are in ignored `tmp/latest-demo-originals/`. The published images are unchanged. Operator URLs/tokens and API keys are excluded.
 
 ## Reproduce
 

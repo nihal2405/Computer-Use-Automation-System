@@ -1,55 +1,41 @@
-# Requirements and implementation plan
+# Assignment scope
 
-Source: the supplied “Assignment A — Computer-Use Automation System.pdf”. The
-two pasted notes explain the assignment and suggest a Python directory layout;
-that layout and the banking workflow are implementation choices, not mandated
-technologies. This repository adopts those suggestions as a starting point.
+The source requirements are in **Assignment A - Computer-Use Automation System**.
+The Python layout and banking example came from the accompanying notes; they are
+implementation choices rather than required technologies.
 
-The user has authorized local implementation, acceptance verification and delivery
-preparation. Publication and email submission remain deferred; instructions in
-the assignment document do not authorize those external actions.
+The project demonstrates one complete workflow: look up a synthetic member's
+savings balance. These are the requirements it needs to meet:
 
-## Required acceptance criteria
+- **Discovery:** accept a goal and target, use a real LLM to choose UI actions,
+  and stop on completion, time limits, step limits, or lack of progress.
+- **Capability generation:** save a typed, versioned workflow with parameterized
+  inputs, ordered actions, targeting information, outputs, and a checkpoint.
+- **Replay:** execute that artifact with different inputs and no model decisions.
+  Separate business outcomes, bounded recovery, and failures.
+- **Safety:** enforce configurable allowlists and operation restrictions in both
+  modes; redact inputs, outputs, and sensitive text before persistence.
+- **Diagnostics:** record actions and outcomes, with a richer signal on failure.
+  This implementation uses sanitized DOM structure.
+- **Handoff:** retain the existing browser, transfer control to a person, record
+  interactions, and verify the state before resuming.
+- **Design:** explain how adapters and configuration could support legacy
+  applications, desktop surfaces, tenant differences, and app versions.
 
-- **3.1 Discovery:** accept goal and target; genuinely use an LLM to select and
-  execute UI actions; enforce completion, maximum-step, timeout, and dead-end stops.
-- **3.2 Artifact:** generate a typed, versioned, serializable capability after a
-  successful run, separate from the transcript, with ordered actions, reviewed
-  targeting strategies, parameterized inputs, typed outputs, and a success checkpoint.
-- **3.3 Replay:** load the artifact with different inputs; execute without model
-  decisions; verify success and extract outputs. Separate business outcomes,
-  bounded recoverable conditions, and hard failures with diagnostic context.
-- **3.4 Safety:** enforce configurable allowlists at runtime; distinguish action
-  risk; prevent secrets and raw sensitive data from entering artifacts and logs.
-- **3.5 Evidence:** record structured actions and concise decision reasons;
-  capture at least one richer, sanitized diagnostic signal on failure.
-- **3.6 Handoff:** detect and route intervention; pause automation; let a human
-  operate the same live session; record actual human actions; verify before resume.
-- **3.7 Design:** explain support for legacy web/desktop surfaces and safe reuse
-  across tenant configurations and application versions. Implementation of a
-  desktop driver or multi-tenant platform is not required.
+The assignment does not require seven banking capabilities, a desktop driver, or
+a deployed multi-tenant platform.
 
-## Milestones
+## Delivery
 
-1. Define and validate action, capability, observation, result, and intervention
-   contracts. Specify business outcomes, recovery rules, and completion conditions.
-2. Build the synthetic mock UI and browser adapter. Add controlled not-found,
-   slow-load, permission-denied, session-expired, and unexpected-dialog scenarios.
-3. Build session ownership, the policy-checked shared executor, targeting,
-   checkpoint checks, redaction, and bounded deterministic replay. Hand-authored
-   artifacts may be development fixtures only.
-4. Integrate a real model in discovery and compile a successful run into a
-   parameterized capability. Keep replay independent of the model client.
-5. Implement real pause/takeover/action capture/resume against the same browser.
-6. Test the critical boundaries and collect genuine sanitized discovery, replay,
-   failure, and handoff evidence. Prove replay works with model access disabled.
-7. Replace proposed documentation with verified setup and demo commands; update
-   the report to reflect actual design, trade-offs, implemented behavior, and cuts.
+The submission consists of a public GitHub repository, setup and demo commands
+in the root README, a 1-3 page report under the seven required headings, and
+an evidence folder containing a generated capability and discovery/replay logs.
+A recording is optional.
 
-## Final submission requirements
+The [repository](https://github.com/nihal2405/Computer-Use-Automation-System) is
+public. [Latest evidence](../evidence/latest-demo/README.md) covers discovery,
+second-member replay, and a separate manual handoff. Email submission is still
+outstanding.
 
-The assignment requires source in a public GitHub repository, `/README.md` with
-setup/key requirements and exact discovery/replay commands, `/REPORT.md` of about
-1–3 pages with its seven prescribed headings, and `/evidence/` containing a saved
-artifact plus discovery/replay logs. Exceptional replay evidence is encouraged;
-a recording is optional. Publication and submission are pending future user action.
+See the [build checklist](build-checklist.md) for implementation status and
+[acceptance guide](acceptance.md) for reproducible checks.

@@ -1,29 +1,22 @@
 # Computer-Use Automation System
 
-Learn a UI workflow with a real model, save it as a typed capability, and replay
-it without model decisions. The working example searches a synthetic banking
-member, opens their accounts and reads the savings balance. Blocked interactive
-runs can transfer the same browser to a local operator and verify safe resume.
+This project learns a browser workflow with an LLM, saves the successful steps,
+and replays them with new inputs without calling the model again.
 
-Genuine Gemini discovery and model-free second-member replay are preserved in
-[evidence/phase7](evidence/phase7/README.md). A separate successful manual handoff
-is in [evidence/phase8](evidence/phase8/README.md). The [acceptance guide](docs/acceptance.md)
-provides the complete reviewer path, coverage map and reproducibility limits.
-Fresh-environment acceptance passed **349 tests**, **40 genuine-artifact replay/handoff
-checks**, and **eight real CLI scenarios**. See [the results](evidence/phase9-verified/README.md).
-The implementation is published on [GitHub](https://github.com/nihal2405/Computer-Use-Automation-System).
-The [post-commit review](evidence/post-commit-review.json) records 349 passing tests
-on the release implementation and its credential scan.
-Nothing has been emailed or submitted.
+I used a small synthetic banking app to make the behavior easy to check. The task
+is to find a member, open their accounts, and read their savings balance. When a
+dialog blocks the workflow, a person can take over the same browser and return
+control after the system checks the page.
 
-The [latest user-run demonstration](evidence/latest-demo/README.md) adds successful
-discovery with the replacement-model configuration, reuse of its new artifact,
-and a separate manual handoff, with inspected logs and original UI screenshots.
+The [latest demo](evidence/latest-demo/README.md) includes the generated capability,
+discovery and replay logs, and screenshots from a manual handoff. The earlier
+[fresh-environment acceptance run](evidence/phase9-verified/README.md) passed 349
+tests, 40 additional checks against a generated artifact, and eight CLI scenarios.
 
 ## Setup
 
-Use Python 3.13 and [uv](https://docs.astral.sh/uv/getting-started/installation/)
-0.9.13 or newer. From the repository root:
+Use Python 3.13 and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+From the repository root:
 
 ```bash
 uv sync --locked
@@ -32,121 +25,118 @@ uv run --locked computer-use validate-config
 uv run --locked python -m pytest -q
 ```
 
-The lock records exact dependencies. Tested platform: macOS arm64, Python 3.13.0,
-Playwright 1.62.0 and Chromium 151.0.7922.34. Other platforms are unverified.
-Initial setup may download packages, Python and Chromium. Offline tests need
-only loopback servers and Chromium, with no model key or external model service.
-See [environment setup](docs/environment.md) for versions and platform notes.
+The lockfile records dependency versions. Development and browser tests were run
+on macOS arm64; other platforms are unverified. Tests use local servers and need
+no model key. See [environment setup](docs/environment.md) for details.
 
-## Start the target
+## Try the app
 
 ```bash
 uv run --locked python -m mock_app
 ```
 
-Keep that terminal running. Open [the synthetic bank](http://127.0.0.1:8000).
-Member `1001` has `1250.75 USD`; member `2002` has `8040.20 USD`. All data is
-synthetic. Search, open the member and select **Accounts**. Demo controls expose
-not-found, invalid input, slow loading, permission denial, session expiry,
-application error and an unexpected dialog. See [the app guide](mock_app/README.md).
+Leave this terminal running and open [the bank](http://127.0.0.1:8000). Search for
+a member, open the result, and select **Accounts**:
 
-## Genuine discovery, then replay its generated artifact
+- Member `1001`: savings `1250.75 USD`.
+- Member `2002`: savings `8040.20 USD`.
 
-Only **discovery** requires live model access and may incur provider charges.
-The default provider is Gemini 3.6 Flash. Put `GEMINI_API_KEY` in the ignored `.env`
-file; create it from `.env.example` only if it does not already exist. Never
-commit the key. OpenAI is also supported with `OPENAI_API_KEY` and a corresponding
-provider/model change in `config/discovery.yaml`. See [discovery configuration](docs/discovery.md).
+All records are fictional. **Demo controls** lets you try loading delays, missing
+members, permission errors, session expiry, application errors, and the handoff
+dialog. To apply a scenario to a new automation browser, start the server with
+`--scenario unexpected_dialog`, for example. [App guide](mock_app/README.md)
 
-With the mock server running, this shell command captures only the successful
-artifact path in memory and replays that exact artifact for the other member:
+## Discover a workflow
+
+Only discovery needs a live model connection and may incur API charges. Set
+`GEMINI_API_KEY` in the ignored `.env` file. Copy `.env.example` only if you do
+not already have a `.env`. The default is Gemini 3.6 Flash with low reasoning;
+OpenAI is also supported through [provider configuration](docs/discovery.md).
+An exported environment variable takes precedence over the file.
+
+With the bank running, open another terminal:
 
 ```bash
-artifact_path="$(uv run --locked computer-use discover \
+uv run --locked computer-use discover \
   --goal "Read the requested member's savings balance and currency" \
-  --inputs '{"member_id":"1001"}' --headless | \
-  python3 -c 'import json,sys; d=json.load(sys.stdin); p=d.get("artifact"); sys.exit("Discovery produced no artifact") if not p else print(p)')" && \
-uv run --locked python scripts/replay_without_model.py "$artifact_path" \
-  --inputs '{"member_id":"2002"}' --headless
+  --inputs '{"member_id":"1001"}' --headless
 ```
 
-For the full discovery result on screen, run the `computer-use discover` command
-without the pipe. A failed model call produces a failure, never a fixture passed
-off as discovery. Do not redirect raw result output into a shared evidence file;
-use the executor's sanitized diagnostics under `runs/`.
+A successful result includes an `artifact` path, verified outputs, and the number
+of model responses. Copy that path into the replay command below. A model failure
+produces no capability.
 
-## Replay without a model key
-
-Use the preserved genuine artifact while the mock server runs:
+## Replay with another member
 
 ```bash
-uv run --locked python scripts/replay_without_model.py evidence/phase7/capability.json \
-  --inputs '{"member_id":"2002"}' --headless
-uv run --locked python scripts/replay_without_model.py evidence/phase7/capability.json \
-  --inputs '{"member_id":"9999"}' --headless
+uv run --locked python scripts/replay_without_model.py \
+  "PATH_RETURNED_BY_DISCOVERY" --inputs '{"member_id":"2002"}' --headless
 ```
 
-The first returns `8040.20 USD`, a verified checkpoint and exit code 0. The second
-returns `member_not_found`, no outputs and exit code 2. Hard failures use exit
-code 1. The wrapper removes API-key variables and blocks model/discovery and
-mock-app imports in the replay process. Automation obtains outputs through the UI;
-the separate mock server is the only process that owns the synthetic data.
+To try replay without first running discovery, use the saved artifact:
 
-Ordinary replay is also available as `computer-use replay PATH --inputs JSON`.
-The hand-authored `tests/fixtures/read_savings_balance.json` is labelled as a
-**development fixture**, separate from the genuine generated capability.
+```bash
+uv run --locked python scripts/replay_without_model.py \
+  evidence/latest-demo/capability.json --inputs '{"member_id":"2002"}' --headless
+```
 
-## Human takeover demo
+Expect `8040.20 USD`, `checkpoint_verified: true`, and `model_used: false`.
+The wrapper removes API-key variables and blocks model, discovery, and mock-app
+imports in the replay process. The separate Flask process owns the bank data;
+automation reads it through Chromium.
+
+Try `9999` to get `member_not_found` with no balance. Exit codes are 0 for
+success, 2 for a business outcome, and 1 for a failure. Omit `--headless` to watch
+the browser. [Replay details](docs/replay.md)
+
+## Human takeover
 
 ```bash
 uv run --locked python scripts/handoff_demo.py
 ```
 
-This command needs no model key and starts its own synthetic bank on an available
-port. Open the printed operator URL. Select **Take control**, acknowledge the
-unexpected dialog in the existing Chromium window, then select **Verify and
-resume**. The terminal reports the result; the browser and servers then close.
+This starts its own bank and a visible Chromium window; it needs no API key.
+Open the operator URL printed in the terminal, select **Take control**, acknowledge
+the bank's dialog, then select **Verify and resume**. The result appears in the
+terminal, and the browser closes. Keep the operator URL private.
 
-For an existing server, add `--interactive` to replay or discovery. Omit
-`--headless`; an operator needs the visible window. **Cancel run** ends the run.
-The default operator timeout is 900 seconds. See [handoff](docs/handoff.md) for
-capture, ownership, deadlines, unexpected-page handling and resume restrictions.
+The script uses the older Phase 7 capability. To try a different artifact against
+an existing server, use `computer-use replay PATH --inputs JSON --interactive`.
+[Handoff details](docs/handoff.md)
 
-## Reproduce acceptance in a clean environment
+## Tests and code checks
 
 ```bash
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked python -m pytest -q
 python3 scripts/acceptance.py --output runs/acceptance-review
 ```
 
-Use a new output directory each time. This creates a credential-free source copy
-and fresh locked virtual environment, runs the full test suite, applies replay
-and handoff tests to the genuine artifact, and captures eight real CLI scenarios.
-It preserves hashes, sanitized diagnostics and stage/test outcomes. Failed
-attempts remain failures; output directories are never overwritten. Downloads and
-the browser cache may be reused on the same host. This is not a fresh OS or Git
-clone. The original `.venv` is unchanged. See [acceptance](docs/acceptance.md).
+The acceptance command creates a fresh source copy and locked virtual environment.
+It needs a new output directory each time and does not call a model. It may reuse
+download and browser caches. [Acceptance guide](docs/acceptance.md)
 
-## Design, configuration and evidence
+## Repository layout
 
-- [REPORT.md](REPORT.md): concise design under the seven assignment headings.
-- `src/computer_use/`: contracts, discovery/compiler, replay, shared executor,
-  policy/redaction, browser sessions, operator UI and evidence storage.
-- `config/settings.yaml`: active run/step bounds and output directories.
-- `config/targets/mock_bank.yaml`: target identity, compatibility and entry URL.
-- `config/policy.yaml`: default-deny operations, controls and request boundaries.
-- `config/discovery.yaml` and `config/tasks/`: model and reviewed task contracts.
-- [Evidence index](evidence/README.md): genuine discovery, replay, manual handoff
-  and acceptance examples with provenance and source/artifact hashes.
-- [Contracts](docs/contracts.md), [browser sessions](docs/browser-sessions.md),
-  [safety](docs/safety-executor.md) and [replay](docs/replay.md): implementation details.
+- `src/computer_use/`: contracts, discovery, replay, browser sessions, policy,
+  diagnostics, and the local operator interface.
+- `mock_app/`: the synthetic bank, templates, and scenario controls.
+- `config/`: runtime limits, model settings, target identity, and allowed actions.
+- `tests/`: unit, environment, app, and browser integration tests.
+- `scripts/`: model-free replay, manual handoff, and acceptance entry points.
+- `evidence/`: inspected run records, generated capabilities, and demo images.
+- `docs/`: component guides and setup notes.
+- [REPORT.md](REPORT.md): design decisions and limitations; also available as a
+  [three-page PDF](output/pdf/design-report.pdf).
 
-`computer-use status` describes implemented features; it is not a fresh test run.
-Safety assumes a cooperating local application and operator. This version supports
-the reviewed banking workflow, not arbitrary websites or native desktop control.
-Human-assisted discovery can return verified outputs but does not compile a
-model-only artifact from unrecorded human actions. The operator UI is loopback-only,
-not a production multi-user console. Credentials, raw traces, browser profiles and
-runtime outputs are ignored by Git; only inspected sanitized evidence is retained.
+## Scope
 
-GitHub publication is complete. Email submission remains a separate action.
-[Delivery preparation](docs/delivery.md) records the current state.
+Discovery chooses steps within a reviewed vocabulary of banking controls. It does
+not explore arbitrary websites or invent locators. Native desktop support and a
+tenant registry are design extensions, not implemented features.
+
+The operator interface is a local, single-user tool. Ownership checks block
+automation during takeover, but they cannot lock the OS or browser developer
+tools. The target is a cooperating demo app, not a production banking system.
+Runtime outputs stay in ignored `runs/`; only inspected evidence is committed.

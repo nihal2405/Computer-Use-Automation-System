@@ -57,16 +57,24 @@ class HumanCapture:
             return state
         if state != "HUMAN_CONTROL" or self.failed:
             return state
-        if (not isinstance(payload, dict) or set(payload) != {"interaction", "tag"}
-                or payload["interaction"] not in {"click", "input", "change", "submit", "focus"}
-                or payload["tag"] not in {"button", "a", "input", "select", "textarea", "form", "unknown_tag"}):
+        if (
+            not isinstance(payload, dict)
+            or set(payload) != {"interaction", "tag"}
+            or payload["interaction"] not in {"click", "input", "change", "submit", "focus"}
+            or payload["tag"]
+            not in {"button", "a", "input", "select", "textarea", "form", "unknown_tag"}
+        ):
             return state
         self._record(payload)
         return state
 
     def _record(self, payload):
         try:
-            self.executor.store.event(event="human_interaction", control_state=self.executor.control.state, details=payload)
+            self.executor.store.event(
+                event="human_interaction",
+                control_state=self.executor.control.state,
+                details=payload,
+            )
             self.count += 1
         except PersistenceError:
             self.failed = True
@@ -77,7 +85,10 @@ class HumanCapture:
             task.add_done_callback(self.pending.discard)
 
     def _navigation(self, frame):
-        if frame == self.session._page.main_frame and self.executor.control.state == "HUMAN_CONTROL":
+        if (
+            frame == self.session._page.main_frame
+            and self.executor.control.state == "HUMAN_CONTROL"
+        ):
             self._record({"interaction": "navigation"})
 
     async def mode(self, state):

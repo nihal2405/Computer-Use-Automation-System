@@ -24,6 +24,7 @@ class CapabilityStore:
     @staticmethod
     def load(path):
         try:
+
             def unique(pairs):
                 result = {}
                 for key, value in pairs:
@@ -68,15 +69,29 @@ class CapabilityStore:
                 cleaned["discovery_run_id"] = original.discovery_run_id
             sanitized = Capability.model_validate(cleaned)
             for before, after in zip(original.steps, sanitized.steps):
-                if (before.operation != after.operation or canonical(before.action.model_dump()) != canonical(after.action.model_dump())
-                        or canonical(before.precondition.model_dump() if before.precondition else None) != canonical(after.precondition.model_dump() if after.precondition else None)
-                        or canonical(before.postcondition.model_dump() if before.postcondition else None) != canonical(after.postcondition.model_dump() if after.postcondition else None)):
+                if (
+                    before.operation != after.operation
+                    or canonical(before.action.model_dump()) != canonical(after.action.model_dump())
+                    or canonical(before.precondition.model_dump() if before.precondition else None)
+                    != canonical(after.precondition.model_dump() if after.precondition else None)
+                    or canonical(
+                        before.postcondition.model_dump() if before.postcondition else None
+                    )
+                    != canonical(after.postcondition.model_dump() if after.postcondition else None)
+                ):
                     raise ValueError("Redaction would change an executable operation")
-            if (original.target != sanitized.target or canonical(original.success_checkpoint.model_dump()) != canonical(sanitized.success_checkpoint.model_dump())
-                    or set(original.inputs) != set(sanitized.inputs) or set(original.outputs) != set(sanitized.outputs)):
+            if (
+                original.target != sanitized.target
+                or canonical(original.success_checkpoint.model_dump())
+                != canonical(sanitized.success_checkpoint.model_dump())
+                or set(original.inputs) != set(sanitized.inputs)
+                or set(original.outputs) != set(sanitized.outputs)
+            ):
                 raise ValueError("Redaction would change invocation or checkpoint semantics")
             for before, after in zip(original.business_outcomes, sanitized.business_outcomes):
-                if before.code != after.code or canonical(before.when.model_dump()) != canonical(after.when.model_dump()):
+                if before.code != after.code or canonical(before.when.model_dump()) != canonical(
+                    after.when.model_dump()
+                ):
                     raise ValueError("Redaction would change a business outcome")
             for before, after in zip(original.recovery_rules, sanitized.recovery_rules):
                 if canonical(before.model_dump()) != canonical(after.model_dump()):

@@ -103,14 +103,15 @@ success evidence.
 
 This is a fresh source copy and virtual environment on the same macOS host.
 Package downloads and Playwright's matching browser cache may be reused. It is
-not a clean OS, an independent hardware check, or a Git clone: the current local
-repository contains uncommitted work. The snapshot and hashes identify exactly
+not a clean OS, an independent hardware check, or a Git clone. The snapshot and
+hashes identify exactly
 what was tested. The runner leaves its temporary workspace available for local
 diagnosis and does not alter the project's `.venv` or start billable model calls.
 
 ## Coverage and evidence map
 
-- **Genuine model decisions and generated capability:** [Phase 7](../evidence/phase7/README.md),
+- **Genuine model decisions and generated capability:** [latest demo](../evidence/latest-demo/README.md)
+  and [Phase 7](../evidence/phase7/README.md),
   with matching discovery run IDs and artifact hash. That historical run is not
   relabelled as a new model call from the clean environment.
 - **UI-only access and new-input reuse:** model-disabled CLI scenarios plus replay
@@ -136,7 +137,7 @@ These local records are reproducible evidence, not provider-signed attestations.
 The implemented scope remains the reviewed synthetic banking workflow. Desktop
 adapters, arbitrary website discovery, OS-level input locking, and compiling
 human-assisted actions into a model-only capability are outside this version.
-Publication and submission remain separate, unrequested actions.
+The repository is public; email submission remains outstanding.
 
 ## Recorded acceptance result
 

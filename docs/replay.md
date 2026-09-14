@@ -2,8 +2,8 @@
 
 Replay loads a saved workflow, substitutes invocation inputs, and follows its
 ordered steps through the policy-checked browser executor. It makes no model
-calls. The supplied artifact is explicitly `development_fixture`: a hand-authored
-test workflow, not evidence of genuine discovery.
+calls. The example below uses the hand-authored `development_fixture` for debugging.
+For a recorded model-generated workflow, use `evidence/latest-demo/capability.json`.
 
 ## Run the demonstration
 
@@ -129,5 +129,5 @@ cancellation, persistence failures, and sanitized artifact reuse. A separate
 process removes API keys and blocks model/discovery imports before loading the
 CLI, then retrieves the second balance through Chromium. Browser request policy
 also blocks external model endpoints. These are deterministic development checks;
-genuine LLM discovery is now demonstrated separately in
-[Phase 7 evidence](../evidence/phase7/README.md), whose artifact passes the same checks.
+recorded discovery and second-member reuse are documented in the
+[latest demo](../evidence/latest-demo/README.md).

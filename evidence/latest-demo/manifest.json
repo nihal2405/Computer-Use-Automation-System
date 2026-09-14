@@ -51,7 +51,7 @@
     "original_evidence_bytes_preserved": true
   },
   "files": {
-    "README.md": "c118248f576488cb6c46e5f1240b34ea580de64c474e4e6c79d85c8fef7757ac",
+    "README.md": "5a917b721588ffff0cdba6d05322ecbcc4a7ac114b650a49666169e69bd7309b",
     "capability.json": "b89f396c4f4b99c72dd46999c5a3ea5aebdc006e8ce42c2721b3ef75c5ac24ce",
     "discovery/28436877-241e-4d7b-97f5-3c9037e53c81.json": "ef6f35285d9b08647730118e3f581864da7eecf311fa23ae4ae31f03aea57779",
     "discovery/events.jsonl": "b96fe779d727b004be3052d2abea626cd542a4c950c4b7304476bd273279b5fe",
@@ -66,5 +66,6 @@
     "images/05-accounts-after-intervention.png": "546c701fd1d22c0038f88487ad7432c894dc78262a82bc1bc32dc387a7c8f238",
     "replay/b0fefccc-ffa6-43b3-9425-9da8a0bbe063.json": "d9c8f998b9dbabf12082430bc6aa17bc51483bc5abbbdb9f423cba059c98f233",
     "replay/events.jsonl": "65f5db1d627985b9553e6037d10e814dec75d33c78803e6ee0c005bdf1355bb9"
-  }
+  },
+  "documentation_revision": "README wording revised during repository review; original execution evidence is unchanged."
 }

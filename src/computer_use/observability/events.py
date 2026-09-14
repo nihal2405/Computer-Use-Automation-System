@@ -14,10 +14,26 @@ class Event(Contract):
     session_id: str
     mode: Literal["discovery", "replay"]
     sequence: Annotated[int, Field(ge=1)]
-    event: Literal["started", "completed", "failure", "control_change", "observation",
-                   "condition_checked", "recovery_started", "run_completed", "run_failed", "business_outcome",
-                   "model_requested", "model_response", "model_rejected", "artifact_created",
-                   "human_interaction", "handoff_requested", "resume_rejected", "handoff_resolved"]
+    event: Literal[
+        "started",
+        "completed",
+        "failure",
+        "control_change",
+        "observation",
+        "condition_checked",
+        "recovery_started",
+        "run_completed",
+        "run_failed",
+        "business_outcome",
+        "model_requested",
+        "model_response",
+        "model_rejected",
+        "artifact_created",
+        "human_interaction",
+        "handoff_requested",
+        "resume_rejected",
+        "handoff_resolved",
+    ]
     step_id: str | None
     action: Literal["navigate", "fill", "click", "read", "wait", "verify"] | None
     policy_decision: Literal["allowed", "denied", "not_checked"]

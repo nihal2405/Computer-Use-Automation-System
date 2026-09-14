@@ -5,7 +5,7 @@ Use that entry point for application work. The API below describes the lower-lev
 adapter, which is also retained for isolated development tests.
 
 Phase 4 implements the `Surface` protocol, a Playwright Chromium adapter, and a
-session owner. Discovery and the future executor can use plain contracts without
+session owner. Discovery and the executor use plain contracts without
 receiving Playwright pages, locators, contexts, or browser objects.
 
 ## Use the adapter
@@ -95,7 +95,7 @@ never trigger an automatic retry of a side effect. If cancellation or the outer
 deadline interrupts a mutating browser command, the session closes its context
 before releasing ownership: cancelling a Python await alone cannot guarantee the
 browser stopped acting. A timed-out or cancelled inspection wait does not close
-the browser. The future executor must map adapter errors to run/step diagnostics.
+the browser. The executor maps adapter errors to run/step diagnostics.
 
 ## Ownership and takeover
 
@@ -131,7 +131,7 @@ Playwright rather than a custom ARIA approximation. Controls use concrete role/n
 targets and expose enabled state. Duplicate accessible targets are omitted from
 the control list; manual targeting of them still fails explicitly.
 
-This first integration checks the target's `data-product` and `data-version`
+The adapter checks the target's `data-product` and `data-version`
 markers and maps recognized `body[data-state]` values into the shared observation
 contract. Unknown states become `unknown`; missing or incompatible product markers
 fail observation. These are cooperation markers for this synthetic target, not
@@ -158,4 +158,5 @@ control, concurrent transfer and queued actions, cancellation, isolated sessions
 and shutdown. A simulated operator resolves the mock dialog on the same page and
 returns through a checked resume state. This is adapter test coverage, not evidence
 of model discovery, a replay engine, or an actual recorded human intervention.
-The complete project suite passes 174 tests, including the 30 new adapter/session checks.
+Historical suite results are recorded with their source revisions in the
+[evidence index](../evidence/README.md).

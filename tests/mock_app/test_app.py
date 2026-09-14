@@ -28,9 +28,13 @@ def choose_scenario(client, scenario):
     return post_form(client, "/demo", {"scenario": scenario}, page="/demo")
 
 
-@pytest.mark.parametrize(("member_id", "name", "balance"), [
-    ("1001", "Avery Morgan", "1250.75"), ("2002", "Jordan Ellis", "8040.20"),
-])
+@pytest.mark.parametrize(
+    ("member_id", "name", "balance"),
+    [
+        ("1001", "Avery Morgan", "1250.75"),
+        ("2002", "Jordan Ellis", "8040.20"),
+    ],
+)
 def test_entire_html_workflow(client, member_id, name, balance):
     result = post_form(client, "/members", {"member_id": member_id})
     assert result.status_code == 200
@@ -47,13 +51,15 @@ def test_entire_html_workflow(client, member_id, name, balance):
     assert "Checking" in accounts.text and "Savings" in accounts.text
 
 
-@pytest.mark.parametrize("member_id", ["", "123", "abc", "10000000000", "１２３４", "<script>alert(1)</script>"])
+@pytest.mark.parametrize(
+    "member_id", ["", "123", "abc", "10000000000", "１２３４", "<script>alert(1)</script>"]
+)
 def test_invalid_search_is_explicit_and_escaped(client, member_id):
     response = post_form(client, "/members", {"member_id": member_id})
     assert response.status_code == 400
     assert 'data-state="validation_error"' in response.text
     assert 'role="alert"' in response.text
-    assert '<script>alert(1)</script>' not in response.text
+    assert "<script>alert(1)</script>" not in response.text
     with client.session_transaction() as state:
         assert "last_search" not in state
 
@@ -65,7 +71,9 @@ def test_search_normalizes_whitespace_without_converting_ids_to_numbers(client):
     assert "01001" in response.text
 
 
-@pytest.mark.parametrize(("scenario", "member_id"), [("normal", "9999"), ("missing_member", "1001")])
+@pytest.mark.parametrize(
+    ("scenario", "member_id"), [("normal", "9999"), ("missing_member", "1001")]
+)
 def test_not_found_is_a_successful_search_outcome(client, scenario, member_id):
     choose_scenario(client, scenario)
     response = post_form(client, "/members", {"member_id": member_id})
@@ -97,12 +105,15 @@ def test_slow_loading_withholds_results_until_deadline(client, monkeypatch):
     assert 'href="/members/1001"' in response.text
 
 
-@pytest.mark.parametrize(("scenario", "status", "title"), [
-    ("permission_denied", 403, "Permission denied"),
-    ("session_expired", 401, "Session expired"),
-    ("application_error", 503, "Application unavailable"),
-    ("unexpected_dialog", 200, "Additional review required"),
-])
+@pytest.mark.parametrize(
+    ("scenario", "status", "title"),
+    [
+        ("permission_denied", 403, "Permission denied"),
+        ("session_expired", 401, "Session expired"),
+        ("application_error", 503, "Application unavailable"),
+        ("unexpected_dialog", 200, "Additional review required"),
+    ],
+)
 def test_blocked_accounts_never_embed_balances(client, scenario, status, title):
     choose_scenario(client, scenario)
     response = client.get("/members/1001/accounts")
@@ -117,7 +128,9 @@ def test_dialog_acknowledgement_preserves_session_and_is_member_specific(client)
     choose_scenario(client, "unexpected_dialog")
     with client.session_transaction() as state:
         original_session_id = state["demo_session_id"]
-    response = post_form(client, "/members/1001/accounts", {"decision": "acknowledge"}, page="/members/1001/accounts")
+    response = post_form(
+        client, "/members/1001/accounts", {"decision": "acknowledge"}, page="/members/1001/accounts"
+    )
     assert response.status_code == 200 and "1250.75" in response.text
     assert "Additional review required" in client.get("/members/2002/accounts").text
     with client.session_transaction() as state:
@@ -147,7 +160,9 @@ def test_scenarios_are_isolated_between_browser_sessions(app):
 def test_normal_scenario_resets_previous_workflow_state(client):
     choose_scenario(client, "unexpected_dialog")
     post_form(client, "/members", {"member_id": "1001"})
-    post_form(client, "/members/1001/accounts", {"decision": "acknowledge"}, page="/members/1001/accounts")
+    post_form(
+        client, "/members/1001/accounts", {"decision": "acknowledge"}, page="/members/1001/accounts"
+    )
     choose_scenario(client, "normal")
     with client.session_transaction() as state:
         assert "last_search" not in state and "acknowledged_member" not in state
@@ -164,12 +179,19 @@ def test_unknown_scenario_does_not_change_current_selection(client):
 @pytest.mark.parametrize("token", ["", "invalid", "☃"])
 def test_forms_reject_missing_or_invalid_csrf(client, token):
     client.get("/")
-    assert client.post("/demo", data={"scenario": "permission_denied", "csrf_token": token}).status_code == 400
+    assert (
+        client.post(
+            "/demo", data={"scenario": "permission_denied", "csrf_token": token}
+        ).status_code
+        == 400
+    )
     with client.session_transaction() as state:
         assert state["scenario"] == "normal"
 
 
-@pytest.mark.parametrize("path", ["/api/members", "/api/balance", "/members/9999", "/members/9999/accounts"])
+@pytest.mark.parametrize(
+    "path", ["/api/members", "/api/balance", "/members/9999", "/members/9999/accounts"]
+)
 def test_unknown_pages_have_no_data_endpoint_or_traceback(client, path):
     response = client.get(path)
     assert response.status_code == 404 and response.mimetype == "text/html"
@@ -178,7 +200,9 @@ def test_unknown_pages_have_no_data_endpoint_or_traceback(client, path):
 
 def test_stale_or_unavailable_operator_actions_are_rejected(client):
     assert post_form(client, "/session/restart", {}).status_code == 400
-    assert post_form(client, "/members/1001/accounts", {"decision": "acknowledge"}).status_code == 400
+    assert (
+        post_form(client, "/members/1001/accounts", {"decision": "acknowledge"}).status_code == 400
+    )
 
 
 def test_page_and_assets_are_self_contained(client):
