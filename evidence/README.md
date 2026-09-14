@@ -5,6 +5,8 @@ operator run from automated tests. Runtime inputs, balances and unreviewed text
 are redacted in JSON/JSONL diagnostics; synthetic examples in documentation and
 application source are labelled as synthetic.
 
+- [Banking app walkthrough](app-walkthrough/README.md). Original screenshots of
+  member search, results, profile, and accounts for synthetic member `1001`.
 - [Latest demonstration](latest-demo/README.md). Six discovery responses,
   reuse of the newly generated artifact without model calls, and a separate manual
   handoff. Includes original UI screenshots containing explicitly synthetic data,
