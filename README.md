@@ -49,7 +49,7 @@ application error and an unexpected dialog. See [the app guide](mock_app/README.
 ## Genuine discovery, then replay its generated artifact
 
 Only **discovery** requires live model access and may incur provider charges.
-The default provider is Gemini 2.5 Flash. Put `GEMINI_API_KEY` in the ignored `.env`
+The default provider is Gemini 3.6 Flash. Put `GEMINI_API_KEY` in the ignored `.env`
 file; create it from `.env.example` only if it does not already exist. Never
 commit the key. OpenAI is also supported with `OPENAI_API_KEY` and a corresponding
 provider/model change in `config/discovery.yaml`. See [discovery configuration](docs/discovery.md).

@@ -8,12 +8,12 @@ deadlines and checkpoints. Model claims of completion never bypass these checks.
 
 The project supports OpenAI Responses and Gemini's OpenAI-compatible Chat
 Completions endpoint through the locked OpenAI Python SDK. The configured default
-is Gemini 2.5 Flash. Settings live in `config/discovery.yaml`:
+is Gemini 3.6 Flash. Settings live in `config/discovery.yaml`:
 
 ```yaml
 provider: gemini
-model: gemini-2.5-flash
-reasoning_effort: none
+model: gemini-3.6-flash
+reasoning_effort: low
 request_timeout_seconds: 30
 max_output_tokens: 2500
 ```
@@ -24,6 +24,14 @@ set `provider: openai`, `model: gpt-4.1-mini-2025-04-14`, and configure
 provider key stops before browser startup. Keys never cross provider boundaries,
 and there is no automatic provider fallback. `.env` is ignored by Git; the example
 file contains only empty fields.
+
+Google may list older models while denying generation access to new users.
+A direct request with the configured key returned HTTP 404 for Gemini 2.5 Flash
+and named Gemini 3.6 Flash as its replacement. The default follows that guidance;
+historical Phase 7 evidence retains the model actually used at the time.
+Gemini 3 requires reasoning enabled, so use `low` rather than `none`.
+The configuration and offline contract tests pass; a successful end-to-end live
+discovery with this replacement model has not yet been verified.
 
 The model endpoint is fixed in code for each provider. Browser allowlists do not
 grant access to model services: the separate provider client sends only the
