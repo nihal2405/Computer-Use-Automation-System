@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "execution_date_user_reported": "2026-09-13",
+  "packaging_source_commit": "b992dded7b4c0f212ac07160be36b14ce96f462a",
+  "source_revision_captured_at_execution": false,
+  "configured_provider": "gemini",
+  "configured_model": "gemini-3.6-flash",
+  "model_attribution": "Current configuration and user-reported command; provider model identifiers are redacted in persisted logs.",
+  "runs": {
+    "discovery": {
+      "run_id": "a7139683-7087-438f-b9ce-69edc4ad9ae0",
+      "session_id": "dbd2b94a-e4a7-47c3-a681-6fddb82987f2",
+      "event_count": 52,
+      "model_responses": 6,
+      "human_interactions": 0,
+      "status": "success",
+      "checkpoint_verified": true
+    },
+    "replay": {
+      "run_id": "8bba6ddf-5343-49a5-b658-899b758fec2a",
+      "session_id": "b73828c9-bcef-4fa8-822d-f6c95e4e14f5",
+      "event_count": 39,
+      "model_responses": 0,
+      "human_interactions": 0,
+      "status": "success",
+      "checkpoint_verified": true
+    },
+    "handoff": {
+      "run_id": "e3ba20e6-db63-4c8b-9164-13a67db91f9c",
+      "session_id": "e1f52662-997a-4023-b2f2-dd095047b4ab",
+      "event_count": 53,
+      "model_responses": 0,
+      "human_interactions": 3,
+      "status": "success",
+      "checkpoint_verified": true
+    }
+  },
+  "replay_artifact_association": "User terminal command and screenshot identify the exact copied artifact.",
+  "handoff_capability": "../phase7/capability.json",
+  "handoff_capability_sha256": "787563c031a5cc30f771d070775ecc711ae3857c3494c3cef9b248262f3d58f1",
+  "checks": {
+    "artifact_schema_valid": true,
+    "event_schemas_valid": true,
+    "contiguous_event_sequences": true,
+    "same_session_through_handoff": true,
+    "no_automation_dispatch_during_human_control": true,
+    "resume_state_verified": true,
+    "configured_key_findings": [],
+    "public_images_visually_reviewed": 3,
+    "terminal_images_published": false,
+    "original_evidence_bytes_preserved": true
+  },
+  "files": {
+    "README.md": "c118248f576488cb6c46e5f1240b34ea580de64c474e4e6c79d85c8fef7757ac",
+    "capability.json": "b89f396c4f4b99c72dd46999c5a3ea5aebdc006e8ce42c2721b3ef75c5ac24ce",
+    "discovery/28436877-241e-4d7b-97f5-3c9037e53c81.json": "ef6f35285d9b08647730118e3f581864da7eecf311fa23ae4ae31f03aea57779",
+    "discovery/events.jsonl": "b96fe779d727b004be3052d2abea626cd542a4c950c4b7304476bd273279b5fe",
+    "handoff/08458df5-b6df-4943-b041-0b9a69fd1ef8.json": "979117928c6d310ba6139c8d2272304b764f245ccfbe7dc7ca7a35b886a586a1",
+    "handoff/92906fa8-7566-4487-bb10-5336e693fdbb.json": "704937928dc479b984b8cc922522fc7af2ad4482ee0490fe140ca82529e3cf48",
+    "handoff/d626b7cb-127b-48c9-bb31-0e87748675e8.json": "805d9ae43005b8860a5ddc8f9637625715a3fe282c434b9fc8bd4621aada726c",
+    "handoff/dbcd4de6-0c04-4ea9-96d3-c8c400cd4d98.json": "280517b713ebb95b0fa7b93408e8809a9a93f8199a7b61fb1c02531504712a5c",
+    "handoff/ec437c72-5bb5-47bf-a99a-9387066e5003.json": "7d65fea0e26b737729a98fab93147836f674af6c6d6dc5d6deebc78201a07205",
+    "handoff/events.jsonl": "d06d9279a0aea774c438df30d5b6647c950938a362562666ac39e53bfbdb47e7",
+    "images/03-unexpected-dialog.png": "dc6d0a84f979e5e6392cee5f38b520894f12a15ffcb35e42a77fb770ae74ee3c",
+    "images/04-operator-paused.png": "4e1f9719427f38c3be51d02d20ceb6490cbce3d6c305edb72bc38976bc4f9bf2",
+    "images/05-accounts-after-intervention.png": "546c701fd1d22c0038f88487ad7432c894dc78262a82bc1bc32dc387a7c8f238",
+    "replay/b0fefccc-ffa6-43b3-9425-9da8a0bbe063.json": "d9c8f998b9dbabf12082430bc6aa17bc51483bc5abbbdb9f423cba059c98f233",
+    "replay/events.jsonl": "65f5db1d627985b9553e6037d10e814dec75d33c78803e6ee0c005bdf1355bb9"
+  }
+}

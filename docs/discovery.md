@@ -30,8 +30,9 @@ A direct request with the configured key returned HTTP 404 for Gemini 2.5 Flash
 and named Gemini 3.6 Flash as its replacement. The default follows that guidance;
 historical Phase 7 evidence retains the model actually used at the time.
 Gemini 3 requires reasoning enabled, so use `low` rather than `none`.
-The configuration and offline contract tests pass; a successful end-to-end live
-discovery with this replacement model has not yet been verified.
+The [latest user-run evidence](../evidence/latest-demo/README.md) records successful
+discovery after this configuration update and replay of the new artifact for a
+different member. Its model attribution and historical-source limits are explicit.
 
 The model endpoint is fixed in code for each provider. Browser allowlists do not
 grant access to model services: the separate provider client sends only the

@@ -16,6 +16,10 @@ The [post-commit review](evidence/post-commit-review.json) records 349 passing t
 on the release implementation and its credential scan.
 Nothing has been emailed or submitted.
 
+The [latest user-run demonstration](evidence/latest-demo/README.md) adds successful
+discovery with the replacement-model configuration, reuse of its new artifact,
+and a separate manual handoff, with inspected logs and original UI screenshots.
+
 ## Setup
 
 Use Python 3.13 and [uv](https://docs.astral.sh/uv/getting-started/installation/)

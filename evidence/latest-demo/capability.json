@@ -1,0 +1,224 @@
+{
+  "schema_version": "1.0",
+  "id": "read_savings_balance",
+  "capability_version": "1.0.0",
+  "description": "redacted_klgpohhhjdcmplhj",
+  "provenance": "llm_discovery",
+  "discovery_run_id": "a7139683-7087-438f-b9ce-69edc4ad9ae0",
+  "target": {
+    "product": "synthetic_bank",
+    "versions": [
+      "1.0"
+    ],
+    "surface": "browser"
+  },
+  "inputs": {
+    "member_id": {
+      "type": "string",
+      "description": "redacted_nnjhknbnkaoehina"
+    }
+  },
+  "outputs": {
+    "balance": {
+      "type": "decimal_string",
+      "description": "redacted_efglbockkpkblgfi"
+    },
+    "currency": {
+      "type": "currency_code",
+      "description": "redacted_hnnjeepnclmlienb"
+    }
+  },
+  "steps": [
+    {
+      "id": "redacted_amlcedjjnfjmphcd",
+      "operation": "search_member",
+      "action": {
+        "action": "navigate",
+        "path": "/"
+      },
+      "precondition": null,
+      "postcondition": null,
+      "timeout_ms": 10000
+    },
+    {
+      "id": "redacted_coippbcpjngedgjd",
+      "operation": "search_member",
+      "action": {
+        "action": "fill",
+        "target": {
+          "rationale": "redacted_oncnlhclombabhaf",
+          "scope": null,
+          "strategy": "label",
+          "label": {
+            "source": "literal",
+            "value": "Member ID"
+          }
+        },
+        "value": {
+          "source": "input",
+          "ref": "inputs.member_id"
+        }
+      },
+      "precondition": null,
+      "postcondition": null,
+      "timeout_ms": 10000
+    },
+    {
+      "id": "redacted_moknijeeefahipcn",
+      "operation": "search_member",
+      "action": {
+        "action": "click",
+        "target": {
+          "rationale": "redacted_bngeljaeijlikmpe",
+          "scope": null,
+          "strategy": "role",
+          "role": "button",
+          "name": {
+            "source": "literal",
+            "value": "Search"
+          }
+        }
+      },
+      "precondition": null,
+      "postcondition": null,
+      "timeout_ms": 10000
+    },
+    {
+      "id": "redacted_ajiebcepiojhmcnk",
+      "operation": "open_member",
+      "action": {
+        "action": "click",
+        "target": {
+          "rationale": "redacted_fdinnonfndaadlml",
+          "scope": null,
+          "strategy": "role",
+          "role": "link",
+          "name": {
+            "source": "input",
+            "ref": "inputs.member_id"
+          }
+        }
+      },
+      "precondition": null,
+      "postcondition": null,
+      "timeout_ms": 10000
+    },
+    {
+      "id": "redacted_inmbboifbdhpffmn",
+      "operation": "open_accounts",
+      "action": {
+        "action": "click",
+        "target": {
+          "rationale": "redacted_bjamkifcbamngjlm",
+          "scope": null,
+          "strategy": "role",
+          "role": "link",
+          "name": {
+            "source": "literal",
+            "value": "Accounts"
+          }
+        }
+      },
+      "precondition": null,
+      "postcondition": null,
+      "timeout_ms": 10000
+    },
+    {
+      "id": "redacted_dalfcaagcpfehgmn",
+      "operation": "read_savings_balance",
+      "action": {
+        "action": "read",
+        "target": {
+          "rationale": "redacted_bdgfaonpininoanj",
+          "scope": null,
+          "strategy": "css",
+          "selector": "td.savings-balance"
+        },
+        "output": "balance"
+      },
+      "precondition": null,
+      "postcondition": null,
+      "timeout_ms": 10000
+    },
+    {
+      "id": "redacted_jkdidejafagfbmfl",
+      "operation": "read_savings_balance",
+      "action": {
+        "action": "read",
+        "target": {
+          "rationale": "redacted_bbhbjphngfjalfia",
+          "scope": null,
+          "strategy": "css",
+          "selector": "td.savings-currency"
+        },
+        "output": "currency"
+      },
+      "precondition": null,
+      "postcondition": null,
+      "timeout_ms": 10000
+    }
+  ],
+  "success_checkpoint": {
+    "kind": "text_equals",
+    "target": {
+      "rationale": "redacted_pfpelfooaoihekhl",
+      "scope": null,
+      "strategy": "css",
+      "selector": ".accounts-member-id"
+    },
+    "expected": {
+      "source": "input",
+      "ref": "inputs.member_id"
+    }
+  },
+  "business_outcomes": [
+    {
+      "code": "member_not_found",
+      "when": {
+        "kind": "visible",
+        "target": {
+          "rationale": "redacted_hgbhljfjfmkhdpca",
+          "scope": null,
+          "strategy": "text",
+          "text": {
+            "source": "literal",
+            "value": "No matching member"
+          }
+        }
+      },
+      "description": "redacted_hhokkaiokfangijl"
+    }
+  ],
+  "recovery_rules": [
+    {
+      "code": "slow_loading",
+      "strategy": "wait_for",
+      "when": {
+        "kind": "visible",
+        "target": {
+          "rationale": "redacted_kjiefjpfeclggdpp",
+          "scope": null,
+          "strategy": "text",
+          "text": {
+            "source": "literal",
+            "value": "Loading"
+          }
+        }
+      },
+      "until": {
+        "kind": "hidden",
+        "target": {
+          "rationale": "redacted_kcljddijempdcjmb",
+          "scope": null,
+          "strategy": "text",
+          "text": {
+            "source": "literal",
+            "value": "Loading"
+          }
+        }
+      },
+      "max_attempts": 2,
+      "timeout_ms": 5000
+    }
+  ]
+}

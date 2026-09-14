@@ -5,6 +5,11 @@ operator run from automated tests. Runtime inputs, balances and unreviewed text
 are redacted in JSON/JSONL diagnostics; synthetic examples in documentation and
 application source are labelled as synthetic.
 
+- [Latest user-run demonstration](latest-demo/README.md). Six discovery responses,
+  reuse of the newly generated artifact without model calls, and a separate manual
+  handoff. Includes original UI screenshots containing explicitly synthetic data,
+  inspected sanitized logs, provenance limitations and a file-hash manifest.
+
 - [Phase 7: genuine discovery and replay](phase7/README.md). Gemini 2.5 Flash made
   six model decisions for the first member. The saved typed capability replayed
   for the second member with model imports blocked and keys removed. Includes
@@ -32,5 +37,5 @@ capture a full source snapshot, a limitation retained in the documentation.
 
 No new model run or manual operator action was invented during acceptance.
 Automated handoff tests are simulated-operator checks. Model/API failure attempts
-from development are not presented as successful discoveries. Publication and
-email submission remain deferred.
+from development are not presented as successful discoveries. The repository is
+public; email submission remains deferred.
