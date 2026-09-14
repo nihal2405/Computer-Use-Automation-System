@@ -13,6 +13,19 @@ discovery and replay logs, and screenshots from a manual handoff. The earlier
 [fresh-environment acceptance run](evidence/phase9-verified/README.md) passed 349
 tests, 40 additional checks against a generated artifact, and eight CLI scenarios.
 
+## Screenshots
+
+Search for a synthetic member, open their profile, and view their accounts.
+
+![Member search with two synthetic members to explore](evidence/app-walkthrough/01-member-search.png)
+
+The accounts page shows member `1001`'s savings balance of `1250.75 USD`.
+
+![Checking and savings accounts for synthetic member 1001](evidence/app-walkthrough/04-accounts.png)
+
+See the [full walkthrough](evidence/app-walkthrough/README.md) for the search
+results and member profile screens.
+
 ## Setup
 
 Use Python 3.13 and [uv](https://docs.astral.sh/uv/getting-started/installation/).
@@ -99,6 +112,10 @@ This starts its own bank and a visible Chromium window; it needs no API key.
 Open the operator URL printed in the terminal, select **Take control**, acknowledge
 the bank's dialog, then select **Verify and resume**. The result appears in the
 terminal, and the browser closes. Keep the operator URL private.
+
+The operator page shows where the run paused and provides takeover and resume controls.
+
+![Operator interface paused at an unexpected dialog before takeover](evidence/latest-demo/images/04-operator-paused.png)
 
 The script uses the older Phase 7 capability. To try a different artifact against
 an existing server, use `computer-use replay PATH --inputs JSON --interactive`.
